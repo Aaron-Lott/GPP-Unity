@@ -13,23 +13,46 @@ public class CharacterMovement : MonoBehaviour
     [SerializeField]
     private LayerMask walkableLayer;
 
+    private int extraJumpCount;
     [SerializeField]
-    private float jumpForce = 5.0f;
+    private int maxExtraJumpCount = 1;
+    
+
+    [SerializeField]
+    private float jumpForce = 200.0f;
+    [SerializeField]
+    private float fallMultiplier = 2.5f;
+    [SerializeField]
+    private float lowJumpMultiplier = 2.0f;
+
+    //MOVEMENT VARIABLES    
+    [SerializeField]
+    private float movementSpeed = 10.0f;
+
+    private Rigidbody rb;
 
     void Start()
     {
-        
+        rb = GetComponent<Rigidbody>();
+
+        extraJumpCount = maxExtraJumpCount;
     }
 
     void FixedUpdate()
     {
-        if(IsGrounded())
+        if(IsGrounded() || extraJumpCount > 0)
         {
-            if(Input.GetAxis("Jump") > 0)
+            if(Input.GetButtonDown("Jump"))
             {
-                JumpHandler();
+                Jump(jumpForce);
             }
         }
+
+        JumpImprover();
+
+        MovementManager();
+
+        Debug.Log(extraJumpCount);
     }
 
     private bool IsGrounded()
@@ -48,11 +71,43 @@ public class CharacterMovement : MonoBehaviour
         return false;
     }
 
-    private void JumpHandler()
+    private void Jump(float force)
     {
-        Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+        if(rb)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, force, rb.velocity.z) * Time.deltaTime;
+            extraJumpCount--;
+        }
+    }
 
-        rb.AddForce(new Vector3(rb.velocity.x, jumpForce, rb.velocity.z));
+    private void JumpImprover()
+    {
+
+        //improves quality of jump.
+        if (rb)
+        {
+            if (rb.velocity.y < 0)
+            {
+                rb.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+            }
+            else if(rb.velocity.y > 0 && !Input.GetButton("Jump"))
+            {
+                rb.velocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
+            }
+        }
+
+
+        //resets player double jump.
+        if(IsGrounded())
+        {
+            extraJumpCount = maxExtraJumpCount;
+        }
+    }
+
+    private void MovementManager()
+    {
+        
+        rb.velocity = new Vector3(movementSpeed * Input.GetAxisRaw("Horizontal"), rb.velocity.y, movementSpeed * Input.GetAxisRaw("Vertical"));     
     }
 
 }
