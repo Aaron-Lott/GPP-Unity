@@ -15,44 +15,59 @@ public class CharacterMovement : MonoBehaviour
 
     private int extraJumpCount;
     [SerializeField]
-    private int maxExtraJumpCount = 1;
+    private int ExtraJumps = 1;
+
+    private float slowAirMovement = 0.5f;
     
 
     [SerializeField]
     private float jumpForce = 200.0f;
-    [SerializeField]
+
     private float fallMultiplier = 2.5f;
-    [SerializeField]
     private float lowJumpMultiplier = 2.0f;
 
     //MOVEMENT VARIABLES    
     [SerializeField]
     private float movementSpeed = 10.0f;
 
+    private float rotateSpeed = 500.0f;
+
+    private Vector3 previousRot;
+    private Vector3 currentRot;
+
     private Rigidbody rb;
+
+    private Animator anim;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        anim = GetComponent<Animator>();
 
-        extraJumpCount = maxExtraJumpCount;
+        extraJumpCount = ExtraJumps;
     }
 
     void FixedUpdate()
     {
-        if(IsGrounded() || extraJumpCount > 0)
+        if(Input.GetButtonDown("Jump"))
         {
-            if(Input.GetButtonDown("Jump"))
+            if (IsGrounded() || extraJumpCount > 0)
             {
                 Jump(jumpForce);
+
+            }
+
+            if (IsGrounded())
+            {
+
+                //only set just animation on the first jump.
+                anim.SetTrigger("jump");
             }
         }
 
         JumpImprover();
 
         MovementManager();
-
-        Debug.Log(extraJumpCount);
     }
 
     private bool IsGrounded()
@@ -100,14 +115,61 @@ public class CharacterMovement : MonoBehaviour
         //resets player double jump.
         if(IsGrounded())
         {
-            extraJumpCount = maxExtraJumpCount;
+            extraJumpCount = ExtraJumps;
         }
     }
 
     private void MovementManager()
     {
-        
-        rb.velocity = new Vector3(movementSpeed * Input.GetAxisRaw("Horizontal"), rb.velocity.y, movementSpeed * Input.GetAxisRaw("Vertical"));     
+
+        float moveHorizontal = Input.GetAxisRaw("Horizontal");
+        float moveVertical = Input.GetAxisRaw("Vertical");
+
+        //deals with rotation.
+        Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
+
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.2f);
+
+
+        if (IsGrounded())
+        {
+            rb.velocity = new Vector3(movementSpeed * moveHorizontal, rb.velocity.y, movementSpeed * moveVertical);
+
+            //check if the player is about to hit the ground at negative velocity and play land animation if true.
+            if (rb.velocity.y < -1.0)
+            {
+
+                anim.SetBool("isLanding", true);
+            }
+            else
+            {
+                anim.SetBool("isLanding", false);
+            }
+        }
+        else
+        {
+            //slow player's movement down if in the air.
+            rb.velocity = new Vector3((Input.GetAxisRaw("Horizontal") * movementSpeed) * slowAirMovement, rb.velocity.y, (Input.GetAxisRaw("Vertical") * movementSpeed) * slowAirMovement);
+
+            //check if player is falling without having jumped.
+            if(rb.velocity.y < -1.0)
+            {
+                //anim.SetTrigger("falling");
+            }
+        }
+
+        //check if player is moving along horizontal axis and set run animation.
+        if (rb.velocity.x != 0 || rb.velocity.z != 0)
+        {
+            if(IsGrounded())
+            {
+                anim.SetBool("isRunning", true);
+            }
+        }
+        else
+        {
+            anim.SetBool("isRunning", false);
+        }
     }
 
 }
