@@ -5,7 +5,13 @@ using UnityEngine;
 public class CharacterMovement : MonoBehaviour
 {
 
+    public static CharacterMovement instance;
+
     //JUMPING VARIABLES.
+    private bool isJumping = false;
+
+    private bool hasFlipped = false;
+
     [SerializeField]
     private Transform groundCheck;
     [SerializeField]
@@ -17,7 +23,7 @@ public class CharacterMovement : MonoBehaviour
     [SerializeField]
     private int ExtraJumps = 1;
 
-    private float slowAirMovement = 0.5f;
+    private float slowAirMovement = 0.6f;
     
 
     [SerializeField]
@@ -30,14 +36,21 @@ public class CharacterMovement : MonoBehaviour
     [SerializeField]
     private float movementSpeed = 10.0f;
 
-    private float rotateSpeed = 500.0f;
-
-    private Vector3 previousRot;
-    private Vector3 currentRot;
-
     private Rigidbody rb;
 
     private Animator anim;
+
+    private void Awake()
+    {
+        if(instance != null)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            instance = this;
+        }
+    }
 
     void Start()
     {
@@ -47,14 +60,29 @@ public class CharacterMovement : MonoBehaviour
         extraJumpCount = ExtraJumps;
     }
 
-    void FixedUpdate()
+    private void Update()
     {
         if(Input.GetButtonDown("Jump"))
         {
+            isJumping = true;
+        }
+        else
+        {
+            isJumping = false;
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if(isJumping)
+        {
+            //reset landing boolean.
+
+            anim.SetBool("isLanding", false);
+
             if (IsGrounded() || extraJumpCount > 0)
             {
                 Jump(jumpForce);
-
             }
 
             if (IsGrounded())
@@ -62,6 +90,12 @@ public class CharacterMovement : MonoBehaviour
 
                 //only set just animation on the first jump.
                 anim.SetTrigger("jump");
+            }
+            else if(!hasFlipped)
+            {
+                //set extra jumps to a flip animation.
+                anim.SetTrigger("flip");
+                hasFlipped = true;
             }
         }
 
@@ -128,8 +162,10 @@ public class CharacterMovement : MonoBehaviour
         //deals with rotation.
         Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
 
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.2f);
-
+        if(movement != Vector3.zero)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.2f);
+        }
 
         if (IsGrounded())
         {
@@ -138,12 +174,11 @@ public class CharacterMovement : MonoBehaviour
             //check if the player is about to hit the ground at negative velocity and play land animation if true.
             if (rb.velocity.y < -1.0)
             {
-
                 anim.SetBool("isLanding", true);
-            }
-            else
-            {
-                anim.SetBool("isLanding", false);
+
+                //reset flip boolean.
+
+                hasFlipped = false;
             }
         }
         else
@@ -164,12 +199,28 @@ public class CharacterMovement : MonoBehaviour
             if(IsGrounded())
             {
                 anim.SetBool("isRunning", true);
+
+                //roll foward if player is running and presses ctrl or button B on Xbox controller.
+                if(Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.Joystick1Button1))
+                {
+                    anim.SetTrigger("roll");
+                }
             }
         }
         else
         {
             anim.SetBool("isRunning", false);
         }
+    }
+
+    void FootR()
+    {
+        //function called on run animation event. ERRORS ARE CAUSED WITHOUT IT.
+    }
+
+    void FootL()
+    {
+        //function called on run animation event. ERRORS ARE CAUSED WITHOUT IT.
     }
 
 }
