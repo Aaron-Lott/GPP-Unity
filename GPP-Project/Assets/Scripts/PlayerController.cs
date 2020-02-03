@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CharacterMovement : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
 
-    public static CharacterMovement instance;
+    public static PlayerController instance;
 
     //JUMPING VARIABLES.
     private bool isJumping = false;
+
+    [HideInInspector]
+    public bool canDoubleJump = false;
 
     private bool hasFlipped = false;
 
@@ -19,26 +22,33 @@ public class CharacterMovement : MonoBehaviour
     [SerializeField]
     private LayerMask walkableLayer;
 
-    private int extraJumpCount;
+    private int extraJumpCount = 0;
     [SerializeField]
-    private int ExtraJumps = 1;
+    private int ExtraJumps = 2;
 
-    private float slowAirMovement = 0.6f;
+    [Range(0.0f, 1.0f)]
+    public float inAirSpeedMultiplier = 0.6f;
     
 
     [SerializeField]
-    private float jumpForce = 200.0f;
+    private float jumpForce = 400.0f;
 
-    private float fallMultiplier = 2.5f;
-    private float lowJumpMultiplier = 2.0f;
+    public float fallMultiplier = 2.5f;
+    public float lowJumpMultiplier = 2.0f;
 
     //MOVEMENT VARIABLES    
     [SerializeField]
-    private float movementSpeed = 10.0f;
+    private float movementSpeed = 6.0f;
+
+    [Range(1.0f, 2.0f)]
+    public float speedBoostMultiplier = 1.5f;
 
     private Rigidbody rb;
 
     private Animator anim;
+
+    [HideInInspector]
+    public bool canForwardRoll = false;
 
     private void Awake()
     {
@@ -56,12 +66,12 @@ public class CharacterMovement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
-
-        extraJumpCount = ExtraJumps;
     }
 
     private void Update()
     {
+        Debug.Log(extraJumpCount);
+
         if(Input.GetButtonDown("Jump"))
         {
             isJumping = true;
@@ -91,7 +101,7 @@ public class CharacterMovement : MonoBehaviour
                 //only set just animation on the first jump.
                 anim.SetTrigger("jump");
             }
-            else if(!hasFlipped)
+            else if(!hasFlipped &&  canDoubleJump)
             {
                 //set extra jumps to a flip animation.
                 anim.SetTrigger("flip");
@@ -125,7 +135,12 @@ public class CharacterMovement : MonoBehaviour
         if(rb)
         {
             rb.velocity = new Vector3(rb.velocity.x, force, rb.velocity.z) * Time.deltaTime;
-            extraJumpCount--;
+
+            //reduce extra jump count.
+            if(extraJumpCount > 0)
+            {
+                extraJumpCount--;
+            }
         }
     }
 
@@ -149,7 +164,10 @@ public class CharacterMovement : MonoBehaviour
         //resets player double jump.
         if(IsGrounded())
         {
-            extraJumpCount = ExtraJumps;
+            if(canDoubleJump)
+            {
+                extraJumpCount = ExtraJumps;
+            }
         }
     }
 
@@ -184,7 +202,7 @@ public class CharacterMovement : MonoBehaviour
         else
         {
             //slow player's movement down if in the air.
-            rb.velocity = new Vector3((Input.GetAxisRaw("Horizontal") * movementSpeed) * slowAirMovement, rb.velocity.y, (Input.GetAxisRaw("Vertical") * movementSpeed) * slowAirMovement);
+            rb.velocity = new Vector3((Input.GetAxisRaw("Horizontal") * movementSpeed) * inAirSpeedMultiplier, rb.velocity.y, (Input.GetAxisRaw("Vertical") * movementSpeed) * inAirSpeedMultiplier);
 
             //check if player is falling without having jumped.
             if(rb.velocity.y < -1.0)
@@ -201,7 +219,7 @@ public class CharacterMovement : MonoBehaviour
                 anim.SetBool("isRunning", true);
 
                 //roll foward if player is running and presses ctrl or button B on Xbox controller.
-                if(Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.Joystick1Button1))
+                if((Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.Joystick1Button1)) && canForwardRoll)
                 {
                     anim.SetTrigger("roll");
                 }
@@ -213,14 +231,19 @@ public class CharacterMovement : MonoBehaviour
         }
     }
 
+    public void IncreaseMovementSpeed()
+    {
+        movementSpeed *= speedBoostMultiplier;
+    }
+
     void FootR()
     {
-        //function called on run animation event. ERRORS ARE CAUSED WITHOUT IT.
+        //function called on run animation event. ERRORS CAUSED WITHOUT IT.
     }
 
     void FootL()
     {
-        //function called on run animation event. ERRORS ARE CAUSED WITHOUT IT.
+        //function called on run animation event. ERRORS CAUSED WITHOUT IT.
     }
 
 }

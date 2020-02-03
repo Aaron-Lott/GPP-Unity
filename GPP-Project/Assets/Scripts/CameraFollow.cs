@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraMovement : MonoBehaviour
+public class CameraFollow : MonoBehaviour
 {
 
     private Transform target;
@@ -10,7 +10,7 @@ public class CameraMovement : MonoBehaviour
 
     void Start()
     {
-        target = CharacterMovement.instance.transform;
+        target = PlayerController.instance.transform;
     }
 
     void Update()
