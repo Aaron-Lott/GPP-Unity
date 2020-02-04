@@ -3762,9 +3762,9 @@ ParticleSystem:
       properties: 0
       emitProbability: 1
   LightsModule:
-    enabled: 0
-    ratio: 0
-    light: {fileID: 0}
+    enabled: 1
+    ratio: 1
+    light: {fileID: 1095280182817897247, guid: 04643770e47b7dd4ea17bb0169bdec2b, type: 3}
     randomDistribution: 1
     color: 1
     range: 1
@@ -4861,3 +4861,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   powerUp: 2
   rotationSpeed: 50
+  speedBoostPS: {fileID: 6136563428938827394, guid: dd1e5913f11e8d84c8de5dde7b0b1f02,
+    type: 3}
+  doubleJumpPS: {fileID: 8129236175313386798, guid: 7571eb95364b2824d8b6a60d24a7bf08,
+    type: 3}
+  forwardRollPS: {fileID: 995503801332460439, guid: 11eaa61fed9e72546bb48d91bc5865ca,
+    type: 3}

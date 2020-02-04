@@ -16,7 +16,9 @@ public class PlayerController : MonoBehaviour
     private bool hasFlipped = false;
 
     [SerializeField]
-    private Transform groundCheck;
+    private Transform groundCheck0;
+    [SerializeField]
+    private Transform groundCheck1;
     [SerializeField]
     private float groundCheckRadius = 0.1f;
     [SerializeField]
@@ -31,7 +33,7 @@ public class PlayerController : MonoBehaviour
     
 
     [SerializeField]
-    private float jumpForce = 400.0f;
+    private float jumpForce = 500.0f;
 
     public float fallMultiplier = 2.5f;
     public float lowJumpMultiplier = 2.0f;
@@ -52,6 +54,7 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+
         if(instance != null)
         {
             Destroy(gameObject);
@@ -70,8 +73,6 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log(extraJumpCount);
-
         if(Input.GetButtonDown("Jump"))
         {
             isJumping = true;
@@ -116,10 +117,11 @@ public class PlayerController : MonoBehaviour
 
     private bool IsGrounded()
     {
-        Collider[] hitColliders = Physics.OverlapSphere(groundCheck.position, groundCheckRadius, walkableLayer);
+        Collider[] hitColliders = Physics.OverlapSphere(groundCheck0.position, groundCheckRadius, walkableLayer);
+        //Collider[] hitColliders = Physics.OverlapCapsule(groundCheck0.position, groundCheck1.position, groundCheckRadius, walkableLayer);
 
         //checks for each object with walkable layer and returns true.
-        foreach(Collider hit in hitColliders)
+        foreach (Collider hit in hitColliders)
         {
             if (hit)
             {
@@ -202,7 +204,7 @@ public class PlayerController : MonoBehaviour
         else
         {
             //slow player's movement down if in the air.
-            rb.velocity = new Vector3((Input.GetAxisRaw("Horizontal") * movementSpeed) * inAirSpeedMultiplier, rb.velocity.y, (Input.GetAxisRaw("Vertical") * movementSpeed) * inAirSpeedMultiplier);
+            rb.velocity = new Vector3((moveHorizontal * movementSpeed) * inAirSpeedMultiplier, rb.velocity.y, (moveVertical * movementSpeed) * inAirSpeedMultiplier);
 
             //check if player is falling without having jumped.
             if(rb.velocity.y < -1.0)
@@ -234,6 +236,14 @@ public class PlayerController : MonoBehaviour
     public void IncreaseMovementSpeed()
     {
         movementSpeed *= speedBoostMultiplier;
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(groundCheck0.position, groundCheckRadius);
+
+        Gizmos.DrawWireSphere(groundCheck1.position, groundCheckRadius);
     }
 
     void FootR()

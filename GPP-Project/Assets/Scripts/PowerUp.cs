@@ -10,6 +10,10 @@ public class PowerUp : MonoBehaviour
 
     public float rotationSpeed = 50.0f;
 
+    public GameObject speedBoostPS;
+    public GameObject doubleJumpPS;
+    public GameObject forwardRollPS;
+
     private void OnTriggerEnter(Collider other)
     {
         if(other.gameObject == PlayerController.instance.gameObject)
@@ -37,15 +41,18 @@ public class PowerUp : MonoBehaviour
             switch (powerUp)
             {
                 case powerUpType.doubleJump:
+                    Instantiate(doubleJumpPS, transform.position, Quaternion.identity);
                     PlayerController.instance.canDoubleJump = true;
                     break;
 
                 case powerUpType.forwardRoll:
                     PlayerController.instance.canForwardRoll = true;
+                    Instantiate(forwardRollPS, transform.position, Quaternion.identity);
                     break;
 
                 case powerUpType.speedBoost:
                     PlayerController.instance.IncreaseMovementSpeed();
+                    Instantiate(speedBoostPS, transform.position, Quaternion.identity);
                     break;
 
                 default:
