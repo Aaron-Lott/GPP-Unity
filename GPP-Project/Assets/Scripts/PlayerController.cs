@@ -41,9 +41,13 @@ public class PlayerController : MonoBehaviour
     //MOVEMENT VARIABLES    
     [SerializeField]
     private float movementSpeed = 6.0f;
+    private float initialMovementSpeed;
 
     [Range(1.0f, 2.0f)]
     public float speedBoostMultiplier = 1.5f;
+
+    private float powerUpDuration = 10.0f;
+    private float startPowerUpTime;
 
     private Rigidbody rb;
 
@@ -51,6 +55,13 @@ public class PlayerController : MonoBehaviour
 
     [HideInInspector]
     public bool canForwardRoll = false;
+
+    [SerializeField]
+    private ParticleSystem speedBoostEffect;
+    [SerializeField]
+    private ParticleSystem doubleJumpEffect;
+    [SerializeField]
+    private ParticleSystem forwardRollEffect;
 
     private void Awake()
     {
@@ -69,6 +80,8 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
+
+        initialMovementSpeed = movementSpeed;
     }
 
     private void Update()
@@ -236,6 +249,39 @@ public class PlayerController : MonoBehaviour
     public void IncreaseMovementSpeed()
     {
         movementSpeed *= speedBoostMultiplier;
+        speedBoostEffect.Play();
+        anim.speed *= speedBoostMultiplier;
+    }
+
+    public void ResetMovementSpeed()
+    {
+        movementSpeed = initialMovementSpeed;
+        speedBoostEffect.Stop();
+        anim.speed /= speedBoostMultiplier;
+    }
+
+    public void CanDoubleJump()
+    {
+        canDoubleJump = true;
+        doubleJumpEffect.Play();
+    }
+
+    public void ResetDoubleJump()
+    {
+        canDoubleJump = false;
+        doubleJumpEffect.Stop();
+    }
+
+    public void CanForwardRoll()
+    {
+        canForwardRoll = true;
+        forwardRollEffect.Play();
+    }
+
+    public void ResetForwardRoll()
+    {
+        canForwardRoll = false;
+        forwardRollEffect.Stop();
     }
 
     private void OnDrawGizmos()
@@ -255,5 +301,4 @@ public class PlayerController : MonoBehaviour
     {
         //function called on run animation event. ERRORS CAUSED WITHOUT IT.
     }
-
 }

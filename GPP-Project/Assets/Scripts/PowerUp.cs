@@ -9,10 +9,14 @@ public class PowerUp : MonoBehaviour
     public powerUpType powerUp = powerUpType.doubleJump;
 
     public float rotationSpeed = 50.0f;
+    public float frequency = 1.0f;
+    public float amplitude = .01f;
 
     public GameObject speedBoostPS;
     public GameObject doubleJumpPS;
     public GameObject forwardRollPS;
+
+    public float powerUpDuration = 10.0f;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -41,18 +45,21 @@ public class PowerUp : MonoBehaviour
             switch (powerUp)
             {
                 case powerUpType.doubleJump:
+                    PlayerController.instance.CanDoubleJump();
                     Instantiate(doubleJumpPS, transform.position, Quaternion.identity);
-                    PlayerController.instance.canDoubleJump = true;
+                    Invoke("ResetDoubleJump", powerUpDuration);
                     break;
 
                 case powerUpType.forwardRoll:
-                    PlayerController.instance.canForwardRoll = true;
+                    PlayerController.instance.CanForwardRoll();
                     Instantiate(forwardRollPS, transform.position, Quaternion.identity);
+                    Invoke("ResetForwardRoll", powerUpDuration);
                     break;
 
                 case powerUpType.speedBoost:
                     PlayerController.instance.IncreaseMovementSpeed();
                     Instantiate(speedBoostPS, transform.position, Quaternion.identity);
+                    Invoke("ResetSpeedBoost", powerUpDuration);
                     break;
 
                 default:
@@ -63,9 +70,22 @@ public class PowerUp : MonoBehaviour
 
     private void Update()
     {
-        //constant rotation.
-        transform.Rotate(rotationSpeed * Time.deltaTime, rotationSpeed * Time.deltaTime, rotationSpeed * Time.deltaTime); 
+        transform.Rotate(rotationSpeed * Time.deltaTime, rotationSpeed * Time.deltaTime, rotationSpeed * Time.deltaTime);
+        transform.position += new Vector3 (0, Mathf.Sin(Time.fixedTime * Mathf.PI * frequency) * amplitude, 0);
     }
 
+    void ResetDoubleJump()
+    {
+        PlayerController.instance.ResetDoubleJump();
+    }
 
+    void ResetForwardRoll()
+    {
+        PlayerController.instance.ResetForwardRoll();
+    }
+
+    void ResetSpeedBoost()
+    {
+        PlayerController.instance.ResetMovementSpeed();
+    }
 }
