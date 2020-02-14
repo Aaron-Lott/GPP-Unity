@@ -12,9 +12,7 @@ public class PowerUp : MonoBehaviour
     public float frequency = 1.0f;
     public float amplitude = .01f;
 
-    public GameObject speedBoostPS;
-    public GameObject doubleJumpPS;
-    public GameObject forwardRollPS;
+    public GameObject collectEffect;
 
     public float powerUpDuration = 10.0f;
 
@@ -42,23 +40,22 @@ public class PowerUp : MonoBehaviour
                 GetComponent<BoxCollider>().enabled = false;
             }
 
+            Instantiate(collectEffect, transform.position, Quaternion.identity);
+
             switch (powerUp)
             {
                 case powerUpType.doubleJump:
                     PlayerController.instance.CanDoubleJump();
-                    Instantiate(doubleJumpPS, transform.position, Quaternion.identity);
                     Invoke("ResetDoubleJump", powerUpDuration);
                     break;
 
                 case powerUpType.forwardRoll:
                     PlayerController.instance.CanForwardRoll();
-                    Instantiate(forwardRollPS, transform.position, Quaternion.identity);
                     Invoke("ResetForwardRoll", powerUpDuration);
                     break;
 
                 case powerUpType.speedBoost:
-                    PlayerController.instance.IncreaseMovementSpeed();
-                    Instantiate(speedBoostPS, transform.position, Quaternion.identity);
+                    PlayerController.instance.ApplySpeedBoost();
                     Invoke("ResetSpeedBoost", powerUpDuration);
                     break;
 
@@ -86,6 +83,6 @@ public class PowerUp : MonoBehaviour
 
     void ResetSpeedBoost()
     {
-        PlayerController.instance.ResetMovementSpeed();
+        PlayerController.instance.ResetSpeedBoost();
     }
 }

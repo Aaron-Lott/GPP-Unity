@@ -7,6 +7,15 @@ public class PlayerController : MonoBehaviour
 
     public static PlayerController instance;
 
+    public CameraFollow cameraFollow;
+
+    [HideInInspector]
+    public Rigidbody rb;
+
+    private Animator anim;
+
+    private CameraShake cameraShake;
+
     //JUMPING VARIABLES.
     private bool isJumping = false;
 
@@ -16,9 +25,8 @@ public class PlayerController : MonoBehaviour
     private bool hasFlipped = false;
 
     [SerializeField]
-    private Transform groundCheck0;
-    [SerializeField]
-    private Transform groundCheck1;
+    private Transform groundCheck;
+
     [SerializeField]
     private float groundCheckRadius = 0.1f;
     [SerializeField]
@@ -28,8 +36,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private int ExtraJumps = 2;
 
+    [Range(1.0f, 2.0f)]
+    public float doubleJumpModifier = 1.2f;
+
     [Range(0.0f, 1.0f)]
-    public float inAirSpeedMultiplier = 0.6f;
+    public float inAirSpeedMultiplier = 0.75f;
     
 
     [SerializeField]
@@ -40,7 +51,7 @@ public class PlayerController : MonoBehaviour
 
     //MOVEMENT VARIABLES    
     [SerializeField]
-    private float movementSpeed = 6.0f;
+    private float movementSpeed = 8.0f;
     private float initialMovementSpeed;
 
     [Range(1.0f, 2.0f)]
@@ -49,12 +60,13 @@ public class PlayerController : MonoBehaviour
     private float powerUpDuration = 10.0f;
     private float startPowerUpTime;
 
-    private Rigidbody rb;
-
-    private Animator anim;
-
     [HideInInspector]
     public bool canForwardRoll = false;
+
+    [HideInInspector]
+    public bool hasSpeedBoost = false;
+
+    public ParticleSystem warpEffect;
 
     [SerializeField]
     private ParticleSystem speedBoostEffect;
@@ -62,6 +74,29 @@ public class PlayerController : MonoBehaviour
     private ParticleSystem doubleJumpEffect;
     [SerializeField]
     private ParticleSystem forwardRollEffect;
+
+    //ATTACK VARIABLES
+    public int damageAmount = 1;
+
+    public int hitForce = 1000;
+    private float forceRadius = 3;
+
+    private bool wieldingWeapon = false;
+
+    public ParticleSystem damagePS;
+
+    [SerializeField]
+    private Transform hitCheckL;
+    [SerializeField]
+    private Transform hitCheckR;
+    [SerializeField]
+    private Transform hitCheckWeapon;
+
+
+    [SerializeField]
+    private float hitCheckRadius = .75f;
+
+    public bool enableCameraShake = true;
 
     private void Awake()
     {
@@ -82,6 +117,7 @@ public class PlayerController : MonoBehaviour
         anim = GetComponent<Animator>();
 
         initialMovementSpeed = movementSpeed;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
 
     private void Update()
@@ -98,11 +134,12 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        if(isJumping)
+
+        if (isJumping)
         {
             //reset landing boolean.
+            //anim.SetBool("isLanding", false);
 
-            anim.SetBool("isLanding", false);
 
             if (IsGrounded() || extraJumpCount > 0)
             {
@@ -111,27 +148,32 @@ public class PlayerController : MonoBehaviour
 
             if (IsGrounded())
             {
-
                 //only set just animation on the first jump.
                 anim.SetTrigger("jump");
             }
-            else if(!hasFlipped &&  canDoubleJump)
+            else if (!hasFlipped && canDoubleJump)
             {
                 //set extra jumps to a flip animation.
+
                 anim.SetTrigger("flip");
                 hasFlipped = true;
+
+                //add extra force on second jump
+                rb.velocity = rb.velocity * 1.2f;
             }
         }
 
         JumpImprover();
 
         MovementManager();
+
+        AttackAnimationManager();
     }
 
     private bool IsGrounded()
     {
-        Collider[] hitColliders = Physics.OverlapSphere(groundCheck0.position, groundCheckRadius, walkableLayer);
-        //Collider[] hitColliders = Physics.OverlapCapsule(groundCheck0.position, groundCheck1.position, groundCheckRadius, walkableLayer);
+
+        Collider[] hitColliders = Physics.OverlapSphere(groundCheck.position, groundCheckRadius, walkableLayer);
 
         //checks for each object with walkable layer and returns true.
         foreach (Collider hit in hitColliders)
@@ -145,17 +187,27 @@ public class PlayerController : MonoBehaviour
         return false;
     }
 
+    private bool IsLanding()
+    {
+        Collider[] hitColliders = Physics.OverlapSphere(groundCheck.position, groundCheckRadius * 2, walkableLayer);
+
+        foreach (Collider hit in hitColliders)
+        {
+            if (hit && rb.velocity.y < -0.3f)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void Jump(float force)
     {
         if(rb)
         {
             rb.velocity = new Vector3(rb.velocity.x, force, rb.velocity.z) * Time.deltaTime;
-
-            //reduce extra jump count.
-            if(extraJumpCount > 0)
-            {
-                extraJumpCount--;
-            }
+            extraJumpCount--;         
         }
     }
 
@@ -188,74 +240,255 @@ public class PlayerController : MonoBehaviour
 
     private void MovementManager()
     {
+        anim.SetBool("isLanding", IsLanding());
 
         float moveHorizontal = Input.GetAxisRaw("Horizontal");
         float moveVertical = Input.GetAxisRaw("Vertical");
 
-        //deals with rotation.
-        Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
+        Vector3 fromCameraToMe = transform.position - cameraFollow.transform.position;
+        fromCameraToMe.y = 0;
 
-        if(movement != Vector3.zero)
+        fromCameraToMe.Normalize();
+
+        //deals with rotation.
+       Vector3 movement =  (fromCameraToMe * moveVertical + cameraFollow.transform.right * moveHorizontal) * movementSpeed;
+
+        if (movement != Vector3.zero)
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.2f);
         }
 
         if (IsGrounded())
         {
-            rb.velocity = new Vector3(movementSpeed * moveHorizontal, rb.velocity.y, movementSpeed * moveVertical);
 
-            //check if the player is about to hit the ground at negative velocity and play land animation if true.
-            if (rb.velocity.y < -1.0)
-            {
-                anim.SetBool("isLanding", true);
+            anim.SetFloat("speed", Mathf.Round(rb.velocity.magnitude));
 
-                //reset flip boolean.
+            rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
 
-                hasFlipped = false;
-            }
+            //check if the player is about to hit the ground at negative velocity and play land animation if true.            
+ 
+            //reset flip boolean.
+            hasFlipped = false;
+            anim.SetBool("isFalling", false);
         }
         else
         {
+
             //slow player's movement down if in the air.
-            rb.velocity = new Vector3((moveHorizontal * movementSpeed) * inAirSpeedMultiplier, rb.velocity.y, (moveVertical * movementSpeed) * inAirSpeedMultiplier);
+            rb.velocity = new Vector3(movement.x * inAirSpeedMultiplier, rb.velocity.y, movement.z * inAirSpeedMultiplier);
 
             //check if player is falling without having jumped.
-            if(rb.velocity.y < -1.0)
+            if (rb.velocity.y < 0f)
             {
-                //anim.SetTrigger("falling");
+                anim.SetFloat("speed", 0);
+                anim.SetBool("isFalling", true);
             }
         }
 
-        //check if player is moving along horizontal axis and set run animation.
+        //check if player is moving along horizontal axis.
         if (rb.velocity.x != 0 || rb.velocity.z != 0)
         {
             if(IsGrounded())
             {
-                anim.SetBool("isRunning", true);
-
-                //roll foward if player is running and presses ctrl or button B on Xbox controller.
-                if((Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.Joystick1Button1)) && canForwardRoll)
+                //check for input / if the player can roll.
+                if (Input.GetButtonDown("Roll") && canForwardRoll)
                 {
                     anim.SetTrigger("roll");
                 }
             }
+
+            if(hasSpeedBoost)
+            {
+                warpEffect.Play();
+                speedBoostEffect.Play();
+            }
         }
         else
         {
-            anim.SetBool("isRunning", false);
+            warpEffect.Stop();
+            speedBoostEffect.Stop();
+        }
+    }
+    private void AttackAnimationManager()
+    {
+
+        if (Input.GetButtonDown("AttackL") && anim.GetLayerWeight(1) == 0 && anim.GetLayerWeight(3) == 0)
+        {
+            int randAnim = Random.Range(1, 7);
+            anim.SetTrigger("attack");
+
+            if (!wieldingWeapon)
+            {
+                //select random attack from blend tree and set blend parameter.
+                anim.SetFloat("Blend", randAnim);
+                anim.SetLayerWeight(1, 1.0f);
+                StartCoroutine(AttackingUnarmed());
+            }
+            else
+            {
+                //select random attack from blend tree and set blend parameter.
+                anim.SetFloat("2ArmedBlend", randAnim);
+                anim.SetLayerWeight(3, 1.0f);
+                StartCoroutine(Attacking2Armed());
+            }
+        }
+        else if (Input.GetButtonDown("WieldWeapon"))
+        {
+            wieldingWeapon = !wieldingWeapon;
+            int weight = 0;
+
+            if(wieldingWeapon)
+            {
+                weight = 1;
+            }
+            else
+            {
+                weight = 0;
+            }
+
+            anim.SetLayerWeight(2, weight);
+        }
+
+        
+    }
+
+    IEnumerator AttackingUnarmed()
+    {
+        yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(1).length);
+        anim.SetLayerWeight(1, 0.0f);
+    }
+
+    IEnumerator Attacking2Armed()
+    {
+        yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(2).length);
+        anim.SetLayerWeight(3, 0.0f);
+    }
+
+    void HitL()
+    {
+        CameraShake();
+
+        Collider[] hitColliders = Physics.OverlapSphere(hitCheckL.position, hitCheckRadius);
+
+        foreach (Collider hit in hitColliders)
+        {
+            if (hit)
+            {
+                if (hit.GetComponent<Damageable>())
+                {
+                    hit.GetComponent<Damageable>().TakeDamage(damageAmount, hit.transform.position);
+                }
+
+                if (hit.GetComponent<Rigidbody>() && hit.gameObject != gameObject)
+                {
+                    ApplyHitForce(hit);
+                }
+            }
         }
     }
 
-    public void IncreaseMovementSpeed()
+    void HitR()
     {
+        CameraShake();
+
+        Collider[] hitColliders = Physics.OverlapSphere(hitCheckR.position, hitCheckRadius);
+
+        foreach (Collider hit in hitColliders)
+        {
+            if (hit)
+            {
+                if (hit.GetComponent<Damageable>())
+                {
+                    hit.GetComponent<Damageable>().TakeDamage(damageAmount, hitCheckL.transform.position);                  
+                }
+
+                if(hit.GetComponent<Rigidbody>() && hit.gameObject != gameObject)
+                {
+                    ApplyHitForce(hit);
+                }
+            }
+        }
+    }
+
+    void HitWeapon()
+    {
+        CameraShake();
+
+        /*Collider[] hitColliders = Physics.OverlapSphere(hitCheckWeapon.position, hitCheckRadius);
+
+        foreach (Collider hit in hitColliders)
+        {
+            if (hit)
+            {
+                if (hit.GetComponent<Damageable>())
+                {
+                    hit.GetComponent<Damageable>().TakeDamage(damageAmount, hitCheckL.transform.position);
+                }
+
+                if (hit.GetComponent<Rigidbody>() && hit.gameObject != gameObject)
+                {
+                    ApplyHitForce(hit);
+                }
+            }
+        }*/
+    }
+
+    void StartHit()
+    {
+        cameraShake = Camera.main.GetComponent<CameraShake>();
+        cameraShake.StartCoroutine(cameraShake.ZoomOut(50, 70));
+    }
+
+    void StartRoll()
+    {
+        cameraShake = Camera.main.GetComponent<CameraShake>();
+        cameraShake.StartCoroutine(cameraShake.ZoomOut(50, 70, 0.5f));
+    }
+
+    void CameraShake()
+    {
+        if (enableCameraShake)
+        {
+            cameraShake = Camera.main.GetComponent<CameraShake>();
+            cameraShake.StartCoroutine(cameraShake.Shake(0.1f, 0.3f));
+        }
+    }
+
+    void ApplyHitForce(Collider hit)
+    {
+        hit.GetComponent<Rigidbody>().AddForce((hit.transform.position - transform.position) * hitForce);
+    }
+
+    public void FreezePlayer(bool freeze)
+    {
+        if(freeze)
+        {
+            rb.constraints = RigidbodyConstraints.FreezeAll;
+
+            if(anim.isInitialized)
+            {
+                anim.Rebind();
+            }
+        }
+        else
+        {
+            rb.constraints &= ~RigidbodyConstraints.FreezePosition;
+        }
+    }
+
+
+    public void ApplySpeedBoost()
+    {
+        hasSpeedBoost = true;
         movementSpeed *= speedBoostMultiplier;
-        speedBoostEffect.Play();
         anim.speed *= speedBoostMultiplier;
     }
 
-    public void ResetMovementSpeed()
+    public void ResetSpeedBoost()
     {
+        hasSpeedBoost = false;
         movementSpeed = initialMovementSpeed;
+        warpEffect.Stop();
         speedBoostEffect.Stop();
         anim.speed /= speedBoostMultiplier;
     }
@@ -263,7 +496,6 @@ public class PlayerController : MonoBehaviour
     public void CanDoubleJump()
     {
         canDoubleJump = true;
-        doubleJumpEffect.Play();
     }
 
     public void ResetDoubleJump()
@@ -275,7 +507,6 @@ public class PlayerController : MonoBehaviour
     public void CanForwardRoll()
     {
         canForwardRoll = true;
-        forwardRollEffect.Play();
     }
 
     public void ResetForwardRoll()
@@ -284,12 +515,22 @@ public class PlayerController : MonoBehaviour
         forwardRollEffect.Stop();
     }
 
+    public void PlayDoubleJumpEffect()
+    {
+        doubleJumpEffect.Play();
+    }
+
+    public void PlayForwardRollEffect()
+    {
+        forwardRollEffect.Play();
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(groundCheck0.position, groundCheckRadius);
-
-        Gizmos.DrawWireSphere(groundCheck1.position, groundCheckRadius);
+        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        Gizmos.DrawWireSphere(hitCheckR.position, hitCheckRadius);
+        Gizmos.DrawWireSphere(hitCheckL.position, hitCheckRadius);
     }
 
     void FootR()
