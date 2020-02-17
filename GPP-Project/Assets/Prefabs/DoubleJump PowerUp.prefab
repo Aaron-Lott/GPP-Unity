@@ -28650,4 +28650,6 @@ MonoBehaviour:
   amplitude: 0.01
   collectEffect: {fileID: 3219066611228839306, guid: e2d437d566156034781e6ef306531ddb,
     type: 3}
-  powerUpDuration: 1000
+  powerUpDuration: 10
+  reEnablePowerUp: 1
+  respawnTime: 5

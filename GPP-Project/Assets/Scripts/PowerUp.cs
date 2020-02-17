@@ -16,29 +16,15 @@ public class PowerUp : MonoBehaviour
 
     public float powerUpDuration = 10.0f;
 
+    public bool reEnablePowerUp = true;
+
+    public float respawnTime = 5f;
+
     private void OnTriggerEnter(Collider other)
     {
         if(other.gameObject == PlayerController.instance.gameObject)
         {
-            //stop playing particle system.
-
-            foreach(Transform child in transform)
-            {
-                if(child.GetComponent<ParticleSystem>())
-                {
-                    child.GetComponent<ParticleSystem>().Stop();
-                }
-            }
-
-            if (GetComponent<Renderer>())
-            {
-                GetComponent<Renderer>().enabled = false;
-            }
-
-            if(GetComponent<BoxCollider>())
-            {
-                GetComponent<BoxCollider>().enabled = false;
-            }
+            DisablePowerUp();
 
             Instantiate(collectEffect, transform.position, Quaternion.identity);
 
@@ -62,6 +48,11 @@ public class PowerUp : MonoBehaviour
                 default:
                     break;
             }
+
+            if(reEnablePowerUp)
+            {
+                Invoke("EnablePowerUp", respawnTime);
+            }
         }
     }
 
@@ -84,5 +75,49 @@ public class PowerUp : MonoBehaviour
     void ResetSpeedBoost()
     {
         PlayerController.instance.ResetSpeedBoost();
+    }
+
+    void DisablePowerUp()
+    {
+        //stop playing particle system.
+
+        foreach (Transform child in transform)
+        {
+            if (child.GetComponent<ParticleSystem>())
+            {
+                child.GetComponent<ParticleSystem>().Stop();
+            }
+        }
+
+        if (GetComponent<Renderer>())
+        {
+            GetComponent<Renderer>().enabled = false;
+        }
+
+        if (GetComponent<BoxCollider>())
+        {
+            GetComponent<BoxCollider>().enabled = false;
+        }
+    }
+
+    void EnablePowerUp()
+    {
+        foreach (Transform child in transform)
+        {
+            if (child.GetComponent<ParticleSystem>())
+            {
+                child.GetComponent<ParticleSystem>().Play();
+            }
+        }
+
+        if (GetComponent<Renderer>())
+        {
+            GetComponent<Renderer>().enabled = true;
+        }
+
+        if (GetComponent<BoxCollider>())
+        {
+            GetComponent<BoxCollider>().enabled = true;
+        }
     }
 }

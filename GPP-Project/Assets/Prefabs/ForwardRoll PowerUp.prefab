@@ -4866,7 +4866,9 @@ MonoBehaviour:
   amplitude: 0.01
   collectEffect: {fileID: 8720873834482782900, guid: ea84d7b338d5400459c470c56289b9ff,
     type: 3}
-  powerUpDuration: 999
+  powerUpDuration: 10
+  reEnablePowerUp: 1
+  respawnTime: 5
 --- !u!1001 &2661535369882719033
 PrefabInstance:
   m_ObjectHideFlags: 0

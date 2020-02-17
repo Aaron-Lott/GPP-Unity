@@ -170,7 +170,7 @@ public class PlayerController : MonoBehaviour
         AttackAnimationManager();
     }
 
-    private bool IsGrounded()
+    public bool IsGrounded()
     {
 
         Collider[] hitColliders = Physics.OverlapSphere(groundCheck.position, groundCheckRadius, walkableLayer);
@@ -523,6 +523,11 @@ public class PlayerController : MonoBehaviour
     public void PlayForwardRollEffect()
     {
         forwardRollEffect.Play();
+    }
+
+    public void StartButtonAnimation()
+    {
+        FindObjectOfType<ElevatorButton>().StartButtonAnimation();
     }
 
     private void OnDrawGizmos()
