@@ -4,25 +4,20 @@ using UnityEngine;
 
 public class RollBehaviour : StateMachineBehaviour
 {
-    private float originalCapsuleHeight;
-    private Vector3 originalCapsuleCener;
-
     private Rigidbody rb;
 
     private float forceStrength = 250;
 
+    private PlayerController player;
+
 
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        player = animator.GetComponent<PlayerController>();
         rb = animator.GetComponent<Rigidbody>();
 
-        originalCapsuleHeight = animator.GetComponent<CapsuleCollider>().height;
-        originalCapsuleCener = animator.GetComponent<CapsuleCollider>().center;
-
         //set collider to be smaller during roll.
-        animator.GetComponent<CapsuleCollider>().center = new Vector3(0, 0.5f, 0);
-        animator.GetComponent<CapsuleCollider>().height = 1.0f;
-
+        player.SetColliderSize(0.5f, 1.0f);
     }
 
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -34,9 +29,7 @@ public class RollBehaviour : StateMachineBehaviour
 
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        //set collider to be the original size after roll.
-        animator.GetComponent<CapsuleCollider>().center = originalCapsuleCener;
-        animator.GetComponent<CapsuleCollider>().height = originalCapsuleHeight;
+        player.SetColliderSize(player.originalCapsuleCenter.y, player.originalCapsuleHeight);
     }
 
 }

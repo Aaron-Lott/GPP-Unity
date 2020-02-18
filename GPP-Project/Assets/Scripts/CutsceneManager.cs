@@ -92,7 +92,7 @@ public class CutsceneManager : MonoBehaviour
         }
         else
         { 
-            Vector3 destination = new Vector3(focus.position.x, playerTarget.transform.position.y, focus.position.z - 1);
+            Vector3 destination = new Vector3(focus.position.x, playerTarget.transform.position.y, focus.position.z - 1.4f);
             while (Vector3.Distance(playerTarget.position, destination) > 0.2f)
             {
                 playerTarget.LookAt(new Vector3(focus.position.x, playerTarget.position.y, focus.position.z));
@@ -150,13 +150,19 @@ public class CutsceneManager : MonoBehaviour
             }
 
             playerTarget.parent = null;
+
+            //activating follow camera so it can update it's position.
+            //stopping player from rotating follow camera during cutscene.
+            followCamera.SetActive(true);
+            followCamera.GetComponent<CameraFollow>().rotateWithInput = false;
+            //
         }
 
 
         startRot = cutsceneCamera.transform.rotation;
         y = 0f;
-        startDistance = Vector3.Distance(cutsceneCamera.transform.position, followCamera.transform.position);
 
+        startDistance = Vector3.Distance(cutsceneCamera.transform.position, followCamera.transform.position);
         while (Vector3.Distance(cutsceneCamera.transform.position, followCamera.transform.position) > 0.2f)
         {
             cutsceneCamera.transform.position = Vector3.Lerp(cutsceneCamera.transform.position, followCamera.transform.position, y += (cameraSpeed * 0.0001f));
@@ -180,12 +186,7 @@ public class CutsceneManager : MonoBehaviour
 
         followCamera.SetActive(true);
         cutsceneCamera.SetActive(false);
-    }
 
-    float GetLerpValue()
-    {
-        float startDistance = Vector3.Distance(cutsceneCamera.transform.position, cameraDestination.position);
-        float x = 1 - Vector3.Distance(cutsceneCamera.transform.position, cameraDestination.position) / startDistance;
-        return 1 / (1 + Mathf.Exp((-12f * (x - 0.5f))));
+        followCamera.GetComponent<CameraFollow>().rotateWithInput = true;
     }
 }

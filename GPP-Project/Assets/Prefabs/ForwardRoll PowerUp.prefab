@@ -4765,7 +4765,7 @@ GameObject:
   - component: {fileID: 6523396450683648604}
   - component: {fileID: 6523396450683648607}
   - component: {fileID: 6523396450683648606}
-  - component: {fileID: 6523396450683648601}
+  - component: {fileID: 4249239989403019094}
   m_Layer: 0
   m_Name: ForwardRoll PowerUp
   m_TagString: Untagged
@@ -4848,7 +4848,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &6523396450683648601
+--- !u!114 &4249239989403019094
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4857,18 +4857,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 6523396450683648600}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b0f4d17299f3844d805327824aa2ff5, type: 3}
+  m_Script: {fileID: 11500000, guid: a91b92bdf523a194aac612f975438309, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  powerUp: 1
   rotationSpeed: 0
   frequency: 1
   amplitude: 0.01
   collectEffect: {fileID: 8720873834482782900, guid: ea84d7b338d5400459c470c56289b9ff,
     type: 3}
   powerUpDuration: 10
-  reEnablePowerUp: 1
-  respawnTime: 5
 --- !u!1001 &2661535369882719033
 PrefabInstance:
   m_ObjectHideFlags: 0

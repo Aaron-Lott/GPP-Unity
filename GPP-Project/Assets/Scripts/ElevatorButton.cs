@@ -8,21 +8,37 @@ public class ElevatorButton : MonoBehaviour
 
     private Animator anim;
 
+    public GameObject buttonUI;
+
     public bool IsButtonPressed { get; set; }
 
     private void Start()
     {
         anim = GetComponent<Animator>();
+        buttonUI.SetActive(false);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if(other.GetComponent<PlayerController>() &&Input.GetButtonDown("Action"))
+        {
+            StartCoroutine(cutscene.StartCutscene());
+            buttonUI.SetActive(false);
+            GetComponent<BoxCollider>().enabled = false;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.GetComponent<PlayerController>())
-        {
-            StartCoroutine(cutscene.StartCutscene());
-            GetComponent<BoxCollider>().enabled = false;
-        }
+        buttonUI.SetActive(true);
     }
+
+    private void OnTriggerExit(Collider other)
+    {
+        buttonUI.SetActive(false);
+    }
+
+
 
     public void StartButtonAnimation()
     {

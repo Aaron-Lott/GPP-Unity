@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1434359266301364928}
   - component: {fileID: 1434359266301364959}
   - component: {fileID: 1434359266301364958}
-  - component: {fileID: 1434359266301364957}
+  - component: {fileID: 4134490725703781563}
   m_Layer: 0
   m_Name: SpeedBoost PowerUp
   m_TagString: Untagged
@@ -95,7 +95,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1434359266301364957
+--- !u!114 &4134490725703781563
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -104,10 +104,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1434359266301364956}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b0f4d17299f3844d805327824aa2ff5, type: 3}
+  m_Script: {fileID: 11500000, guid: 2c44a9d64fd6b6046b6bc69fb69c273e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  powerUp: 2
   rotationSpeed: 50
   frequency: 1
   amplitude: 0.01
@@ -121,11 +120,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1434359266301364929}
     m_Modifications:
-    - target: {fileID: 528416646220129257, guid: e506effe01c35964397dd05ea1c9baa5,
-        type: 3}
-      propertyPath: m_Name
-      value: YellowSmoke
-      objectReference: {fileID: 0}
     - target: {fileID: 528416646220129256, guid: e506effe01c35964397dd05ea1c9baa5,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -181,6 +175,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 528416646220129257, guid: e506effe01c35964397dd05ea1c9baa5,
+        type: 3}
+      propertyPath: m_Name
+      value: YellowSmoke
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e506effe01c35964397dd05ea1c9baa5, type: 3}
 --- !u!4 &119949253437653087 stripped
@@ -196,11 +195,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1434359266301364929}
     m_Modifications:
-    - target: {fileID: 8166632123515100115, guid: a6d71a816124c0c42af848dd2d27c5e1,
-        type: 3}
-      propertyPath: m_Name
-      value: ElectricitySphere
-      objectReference: {fileID: 0}
     - target: {fileID: 8166632123515100116, guid: a6d71a816124c0c42af848dd2d27c5e1,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -255,6 +249,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8166632123515100115, guid: a6d71a816124c0c42af848dd2d27c5e1,
+        type: 3}
+      propertyPath: m_Name
+      value: ElectricitySphere
       objectReference: {fileID: 0}
     - target: {fileID: 8166632123515100117, guid: a6d71a816124c0c42af848dd2d27c5e1,
         type: 3}

@@ -98,6 +98,16 @@ public class PlayerController : MonoBehaviour
 
     public bool enableCameraShake = true;
 
+    [HideInInspector]
+    public float originalCapsuleHeight;
+    [HideInInspector]
+    public Vector3 originalCapsuleCenter;
+
+    //POWERUP VARIABLES
+    public DoubleJump doubleJump;
+    public ForwardRoll forwardRoll;
+    public SpeedBoost speedBoost;
+
     private void Awake()
     {
 
@@ -118,6 +128,9 @@ public class PlayerController : MonoBehaviour
 
         initialMovementSpeed = movementSpeed;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        originalCapsuleHeight = GetComponent<CapsuleCollider>().height;
+        originalCapsuleCenter = GetComponent<CapsuleCollider>().center;
     }
 
     private void Update()
@@ -463,7 +476,7 @@ public class PlayerController : MonoBehaviour
     {
         if(freeze)
         {
-            rb.constraints = RigidbodyConstraints.FreezeAll;
+            rb.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
 
             if(anim.isInitialized)
             {
@@ -511,6 +524,7 @@ public class PlayerController : MonoBehaviour
 
     public void ResetForwardRoll()
     {
+        SetColliderSize(originalCapsuleCenter.y, originalCapsuleHeight);
         canForwardRoll = false;
         forwardRollEffect.Stop();
     }
@@ -528,6 +542,12 @@ public class PlayerController : MonoBehaviour
     public void StartButtonAnimation()
     {
         FindObjectOfType<ElevatorButton>().StartButtonAnimation();
+    }
+
+    public void SetColliderSize(float center, float height)
+    {
+        GetComponent<CapsuleCollider>().center = new Vector3(0, center, 0);
+        GetComponent<CapsuleCollider>().height = height;
     }
 
     private void OnDrawGizmos()
