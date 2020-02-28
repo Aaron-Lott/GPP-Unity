@@ -13,9 +13,16 @@ public class CameraFollow : MonoBehaviour
     private Vector3 minOffset;
 
 
+    private RaycastHit cameraHit;
+    private float cameraMaxHitDistance;
+
+    public float paddingSize;
+
     public float smoothTime = 0.15f;
 
-    public float collisionSmoothTime = 0.5f;
+    public float collisionSmoothTime = 0.01f;
+
+    private float collisionSmoothPerc = 0;
 
     [HideInInspector]
     public bool rotateWithInput = true;
@@ -24,10 +31,15 @@ public class CameraFollow : MonoBehaviour
 
     Quaternion turnAngleHorizontal;
 
+    private bool isColliding = false;
+
+    public bool smoothCollisionOn;
+
     void Start()
     {
         maxOffset = offset * 2;
         minOffset = offset;
+        cameraMaxHitDistance = offset.z;
     }
 
     void LateUpdate()
@@ -35,10 +47,9 @@ public class CameraFollow : MonoBehaviour
         if (rotateWithInput)
         {
             turnAngleHorizontal = Quaternion.AngleAxis(Input.GetAxis("RightStickX") * rotationSpeed, Vector3.up);
-
-            //Quaternion turnAngleVertical = Quaternion.AngleAxis(-Input.GetAxis("RightStickY") * rotationSpeed, target.right);
         }
 
+        //handling zooming in and out.
         if(Input.GetAxis("RightStickY") > 0.1f)
         {
            offset = Vector3.Slerp(offset, maxOffset, Input.GetAxis("RightStickY"));
@@ -50,30 +61,41 @@ public class CameraFollow : MonoBehaviour
 
         offset = turnAngleHorizontal * offset;
 
-        //transform.position = Vector3.Slerp(transform.position, target.position - offset, smoothTime);
-        //transform.position = Vector3.Slerp(transform.position, target.position, collisionSmoothTime);
-
-
         transform.LookAt(target.position);
 
-        RayCastFunc();
+        if(RayCastFunc())
+        {
+            Vector3 padding = (transform.position - target.position).normalized;
+            padding *= paddingSize;
 
+            if(smoothCollisionOn)
+            {
+                collisionSmoothPerc += collisionSmoothTime;
+                transform.position = Vector3.Lerp(transform.position, cameraHit.point + padding, collisionSmoothPerc * Time.deltaTime);
+            }
+            else
+            {
+                transform.position = cameraHit.point + padding;
+            }
+            
+        }
+        else
+        {
+            collisionSmoothPerc = 0;
+        }
+        
+        transform.position = Vector3.Lerp(transform.position, target.position - offset, smoothTime);
+        
     }
 
     bool RayCastFunc()
     {
         Vector3 direction = transform.position - target.position;
-        RaycastHit hit;
 
-        if(Physics.Raycast(target.position, direction, out hit, direction.magnitude))
+        if(Physics.Raycast(target.position, direction, out cameraHit, cameraMaxHitDistance))
         {
             Debug.DrawRay(target.position, direction, Color.yellow);
-            transform.position = target.position;
             return true;
-        }
-        else
-        {
-            transform.position = Vector3.Slerp(transform.position, target.position - offset, smoothTime);
         }
 
         return false;
