@@ -104,9 +104,16 @@ public class PlayerController : MonoBehaviour
     public Vector3 originalCapsuleCenter;
 
     //POWERUP VARIABLES
+    [HideInInspector]
     public DoubleJump doubleJump;
+    [HideInInspector]
     public ForwardRoll forwardRoll;
+    [HideInInspector]
     public SpeedBoost speedBoost;
+
+    [HideInInspector]
+    public Vector3 movement;
+
 
     private void Awake()
     {
@@ -264,7 +271,7 @@ public class PlayerController : MonoBehaviour
         fromCameraToMe.Normalize();
 
         //deals with rotation.
-       Vector3 movement =  (fromCameraToMe * moveVertical + cameraFollow.transform.right * moveHorizontal) * movementSpeed;
+        movement =  (fromCameraToMe * moveVertical + cameraFollow.transform.right * moveHorizontal) * movementSpeed;
 
         if (movement != Vector3.zero)
         {
@@ -486,6 +493,14 @@ public class PlayerController : MonoBehaviour
         else
         {
             rb.constraints &= ~RigidbodyConstraints.FreezePosition;
+        }
+    }
+
+    public void ResetAnim()
+    {
+        if (anim.isInitialized)
+        {
+            anim.Rebind();
         }
     }
 

@@ -1681,8 +1681,14 @@ MonoBehaviour:
     type: 3}
   hitCheckL: {fileID: 4442119996908634004}
   hitCheckR: {fileID: 1114031405506105996}
+  hitCheckWeapon: {fileID: 0}
   hitCheckRadius: 0.75
   enableCameraShake: 1
+  originalCapsuleHeight: 0
+  originalCapsuleCenter: {x: 0, y: 0, z: 0}
+  doubleJump: {fileID: 0}
+  forwardRoll: {fileID: 0}
+  speedBoost: {fileID: 0}
 --- !u!54 &7445341096152089883
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1756,7 +1762,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 208488308227580307}
   m_LocalRotation: {x: -0.50000006, y: 0.5, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: -0.0017318726}
+  m_LocalPosition: {x: 0, y: 0, z: -0.001739502}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 208488308227816489}

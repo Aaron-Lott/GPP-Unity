@@ -9,20 +9,21 @@ public class CameraFollow : MonoBehaviour
     public Vector3 offset; //new Vector3(0, -2, 5);
     private Vector3 vectorRef;
 
-    private Vector3 maxOffset;
-    private Vector3 minOffset;
-
-
     private RaycastHit cameraHit;
     private float cameraMaxHitDistance;
 
-    public float paddingSize;
+    private float paddingSize = -1;
 
     public float smoothTime = 0.15f;
 
     public float collisionSmoothTime = 0.01f;
 
     private float collisionSmoothPerc = 0;
+
+    private float axisSnapValue = 0;
+    private float axisSnapSpeed = 0.03f;
+
+    private Vector3 initialOffset;
 
     [HideInInspector]
     public bool rotateWithInput = true;
@@ -35,11 +36,18 @@ public class CameraFollow : MonoBehaviour
 
     public bool smoothCollisionOn;
 
+    private float zoomValue = 1;
+
+    private const float initZoom = 1;
+    private const float maxZoom = 2;
+    private const float minZoom = 0.5f;
+
     void Start()
     {
-        maxOffset = offset * 2;
-        minOffset = offset;
         cameraMaxHitDistance = offset.z;
+        axisSnapValue = offset.z / 2;
+
+        initialOffset = offset;
     }
 
     void LateUpdate()
@@ -49,26 +57,31 @@ public class CameraFollow : MonoBehaviour
             turnAngleHorizontal = Quaternion.AngleAxis(Input.GetAxis("RightStickX") * rotationSpeed, Vector3.up);
         }
 
-        //handling zooming in and out.
-        if(Input.GetAxis("RightStickY") > 0.1f)
+        if(Input.GetButtonDown("RightStickY"))
         {
-           offset = Vector3.Slerp(offset, maxOffset, Input.GetAxis("RightStickY"));
-        }
-        else if(Input.GetAxis("RightStickY") < -0.1f)
-        {
-            offset = Vector3.Slerp(offset, minOffset, Mathf.Abs(Input.GetAxis("RightStickY")));
+            ZoomHandler();
         }
 
         offset = turnAngleHorizontal * offset;
 
+        transform.position = Vector3.Lerp(transform.position, target.position - (offset * zoomValue), smoothTime);
+
         transform.LookAt(target.position);
 
-        if(RayCastFunc())
+
+        SnapCameraAxis();
+        ColliderHandler();
+        
+    }
+
+    void ColliderHandler()
+    {
+        if (IsColliding())
         {
             Vector3 padding = (transform.position - target.position).normalized;
             padding *= paddingSize;
 
-            if(smoothCollisionOn)
+            if (smoothCollisionOn)
             {
                 collisionSmoothPerc += collisionSmoothTime;
                 transform.position = Vector3.Lerp(transform.position, cameraHit.point + padding, collisionSmoothPerc * Time.deltaTime);
@@ -77,28 +90,78 @@ public class CameraFollow : MonoBehaviour
             {
                 transform.position = cameraHit.point + padding;
             }
-            
+
         }
         else
         {
             collisionSmoothPerc = 0;
         }
-        
-        transform.position = Vector3.Lerp(transform.position, target.position - offset, smoothTime);
-        
     }
 
-    bool RayCastFunc()
+    bool IsColliding()
     {
         Vector3 direction = transform.position - target.position;
 
         if(Physics.Raycast(target.position, direction, out cameraHit, cameraMaxHitDistance))
         {
-            Debug.DrawRay(target.position, direction, Color.yellow);
-            return true;
+            if(!cameraHit.collider.isTrigger)
+            {
+                Debug.DrawRay(target.position, direction, Color.yellow);
+                return true;
+            }
         }
 
         return false;
+    }
+
+    void SnapCameraAxis()
+    {
+        if(Input.GetAxis("RightStickX") == 0 && PlayerController.instance.rb.velocity == Vector3.zero)
+        {
+            Vector3 newPos;
+
+            if (offset.z < -axisSnapValue)
+            {
+                newPos = new Vector3(0, offset.y, -initialOffset.z);
+                offset = Vector3.MoveTowards(offset, newPos, axisSnapSpeed);
+            }
+            else if (offset.z > axisSnapValue)
+            {
+                newPos = new Vector3(0, offset.y, initialOffset.z);
+                offset = Vector3.MoveTowards(offset, newPos, axisSnapSpeed);
+            }
+            else if (offset.x < -axisSnapValue)
+            {
+                newPos = new Vector3(-initialOffset.z, offset.y, 0);
+                offset = Vector3.MoveTowards(offset, newPos, axisSnapSpeed);
+            }
+            else if (offset.x > axisSnapValue)
+            {
+                newPos = new Vector3(initialOffset.z, offset.y, 0);
+                offset = Vector3.MoveTowards(offset, newPos, axisSnapSpeed);
+            }
+        }
+    }
+
+    void ZoomHandler()
+    {
+        switch (zoomValue)
+        {
+            case initZoom:
+                zoomValue = maxZoom;
+                break;
+
+            case maxZoom:
+                zoomValue = minZoom;
+                break;
+
+            case minZoom:
+                zoomValue = initZoom;
+                break;
+
+            default:
+                break;
+        }
     }
 }
 
