@@ -138,6 +138,11 @@ public class PlayerController : MonoBehaviour
 
         originalCapsuleHeight = GetComponent<CapsuleCollider>().height;
         originalCapsuleCenter = GetComponent<CapsuleCollider>().center;
+
+        if(GetComponent<PathCreation.Examples.PathFollower>())
+        {
+            GetComponent<PathCreation.Examples.PathFollower>().enabled = false;
+        }
     }
 
     private void Update()

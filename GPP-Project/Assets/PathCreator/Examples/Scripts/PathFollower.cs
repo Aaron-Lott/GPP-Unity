@@ -8,13 +8,14 @@ namespace PathCreation.Examples
     {
         public PathCreator pathCreator;
         public EndOfPathInstruction endOfPathInstruction;
-        public float speed = 5;
+        private float speed = 8;
         float distanceTravelled;
+
+        private bool facingForward = true;
 
         void Start() {
             if (pathCreator != null)
             {
-                // Subscribed to the pathUpdated event so that we're notified if the path changes during the game
                 pathCreator.pathUpdated += OnPathChanged;
             }
         }
@@ -23,16 +24,34 @@ namespace PathCreation.Examples
         {
             if (pathCreator != null)
             {
+                PlayerController.instance.GetComponent<Animator>().SetFloat("speed", speed * Mathf.Abs(Input.GetAxis("Horizontal")));
+
                 distanceTravelled += Input.GetAxis("Horizontal") * speed * Time.deltaTime;
                 transform.position = pathCreator.path.GetPointAtDistance(distanceTravelled, endOfPathInstruction);
 
                 Quaternion rot = pathCreator.path.GetRotationAtDistance(distanceTravelled, endOfPathInstruction);
-                transform.rotation = Quaternion.Euler(Mathf.Rad2Deg * rot.x, Mathf.Rad2Deg * rot.y, 0);
+
+                if(Input.GetAxis("Horizontal") < 0)
+                {
+                    //turn around
+                    facingForward = false;
+                }
+                else if (Input.GetAxis("Horizontal") > 0)
+                {
+                    facingForward = true;
+                }
+
+                if(facingForward)
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rot * Quaternion.Inverse(Quaternion.Euler(0, 0, -90)), 0.2f);
+                }
+                else
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rot * Quaternion.Inverse(Quaternion.Euler(0, 180, -90)), 0.2f);
+                }
             }
         }
 
-        // If the path changes during the game, update the distance travelled so that the follower's position on the new path
-        // is as close as possible to its position on the old path
         void OnPathChanged() {
             distanceTravelled = pathCreator.path.GetClosestDistanceAlongPath(transform.position);
         }
@@ -42,16 +61,9 @@ namespace PathCreation.Examples
             distanceTravelled = newDist;
         }
 
-        float FollowerDirection()
+        public bool IsFacingForward()
         {
-            Vector2 direction = PlayerController.instance.movement.normalized;
-
-            if(direction.x != 0)
-            {
-                return direction.x;
-            }
-
-            return 0;
+            return facingForward;
         }
     }
 }

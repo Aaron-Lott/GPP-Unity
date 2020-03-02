@@ -19,15 +19,19 @@ public class SplineTrigger : MonoBehaviour
 
     private bool inPosition = false;
 
+    private Vector3 cameraOffset;
+
+    public BoxCollider entranceCollider;
+
     private void Awake()
     {
-        player.GetComponent<PathCreation.Examples.PathFollower>().enabled = !isEntrance;
         splineCamera.SetActive(false);
     }
 
     private void Start()
     {
         initCameraTargetPos = cameraTarget.position;
+        cameraOffset = new Vector3(10, 4.5f, 0.5f);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -43,14 +47,17 @@ public class SplineTrigger : MonoBehaviour
         {
             SplineCameraActive(true);
             cameraTarget.parent = player.transform;
+            cameraTarget.transform.localPosition = cameraOffset;
 
             StartCoroutine(StartSpline());
+            GetComponent<BoxCollider>().enabled = false;
         }
         else
         {
             SplineCameraActive(false);
             cameraTarget.parent = null;
             cameraTarget.transform.position = initCameraTargetPos;
+            entranceCollider.enabled = true;
         }
     }
 
@@ -77,11 +84,28 @@ public class SplineTrigger : MonoBehaviour
         inPosition = true;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
+        splineCamera.transform.LookAt(playerTarget.position);
+
         if(inPosition)
         {
-            splineCamera.transform.position = Vector3.Lerp(splineCamera.transform.position, cameraTarget.position, 0.1f);
+            splineCamera.transform.position = Vector3.Lerp(splineCamera.transform.position, cameraTarget.position, 0.05f);
+        }
+    }
+
+    private void Update()
+    {
+        if(player.GetComponent<PathCreation.Examples.PathFollower>())
+        {
+            if(player.GetComponent<PathCreation.Examples.PathFollower>().IsFacingForward())
+            {
+                cameraTarget.localPosition = cameraOffset;
+            }
+            else
+            {
+                cameraTarget.localPosition = new Vector3(-cameraOffset.x, cameraOffset.y, cameraOffset.z);
+            }
         }
     }
 
