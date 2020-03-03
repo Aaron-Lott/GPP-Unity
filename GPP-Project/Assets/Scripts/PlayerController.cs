@@ -147,7 +147,21 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetButtonDown("Jump"))
+        CheckIfJumping();
+    }
+
+    void FixedUpdate()
+    {
+        JumpManager();
+
+        MovementManager();
+
+        AttackAnimationManager();
+    }
+
+    public void CheckIfJumping()
+    {
+        if (Input.GetButtonDown("Jump"))
         {
             isJumping = true;
         }
@@ -157,9 +171,8 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
+    public void JumpManager()
     {
-
         if (isJumping)
         {
             //reset landing boolean.
@@ -176,23 +189,46 @@ public class PlayerController : MonoBehaviour
                 //only set just animation on the first jump.
                 anim.SetTrigger("jump");
             }
-            else if (!hasFlipped && canDoubleJump)
+            else
             {
-                //set extra jumps to a flip animation.
 
-                anim.SetTrigger("flip");
-                hasFlipped = true;
+                if(!hasFlipped && canDoubleJump)
+                {
+                    //set extra jumps to a flip animation.
 
-                //add extra force on second jump
-                rb.velocity = rb.velocity * 1.2f;
+                    anim.SetTrigger("flip");
+                    hasFlipped = true;
+
+                    //add extra force on second jump
+                    rb.velocity = rb.velocity * doubleJumpModifier;
+                }
             }
         }
 
+        if(!IsGrounded())
+        {
+            //slow player's movement down if in the air.
+            rb.velocity = new Vector3(movement.x * inAirSpeedMultiplier, rb.velocity.y, movement.z * inAirSpeedMultiplier);
+
+            //check if player is falling without having jumped.
+            if (rb.velocity.y < 0f)
+            {
+                anim.SetFloat("speed", 0);
+                anim.SetBool("isFalling", true);
+            }
+        }
+        else
+        {
+            //reset flip boolean.
+            hasFlipped = false;
+            anim.SetBool("isFalling", false);
+        }
+
+        anim.SetBool("isLanding", IsLanding());
+
+        Debug.Log(IsGrounded());
+
         JumpImprover();
-
-        MovementManager();
-
-        AttackAnimationManager();
     }
 
     public bool IsGrounded()
@@ -218,7 +254,7 @@ public class PlayerController : MonoBehaviour
 
         foreach (Collider hit in hitColliders)
         {
-            if (hit && rb.velocity.y < -0.3f)
+            if (hit && rb.velocity.y < 0)
             {
                 return true;
             }
@@ -265,7 +301,6 @@ public class PlayerController : MonoBehaviour
 
     private void MovementManager()
     {
-        anim.SetBool("isLanding", IsLanding());
 
         float moveHorizontal = Input.GetAxisRaw("Horizontal");
         float moveVertical = Input.GetAxisRaw("Vertical");
@@ -289,25 +324,6 @@ public class PlayerController : MonoBehaviour
             anim.SetFloat("speed", Mathf.Round(rb.velocity.magnitude));
 
             rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
-
-            //check if the player is about to hit the ground at negative velocity and play land animation if true.            
- 
-            //reset flip boolean.
-            hasFlipped = false;
-            anim.SetBool("isFalling", false);
-        }
-        else
-        {
-
-            //slow player's movement down if in the air.
-            rb.velocity = new Vector3(movement.x * inAirSpeedMultiplier, rb.velocity.y, movement.z * inAirSpeedMultiplier);
-
-            //check if player is falling without having jumped.
-            if (rb.velocity.y < 0f)
-            {
-                anim.SetFloat("speed", 0);
-                anim.SetBool("isFalling", true);
-            }
         }
 
         //check if player is moving along horizontal axis.
@@ -568,6 +584,14 @@ public class PlayerController : MonoBehaviour
     {
         GetComponent<CapsuleCollider>().center = new Vector3(0, center, 0);
         GetComponent<CapsuleCollider>().height = height;
+    }
+
+    public void FollowerGrounded()
+    {
+        if(IsGrounded() && rb.velocity.y < 0)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+        }
     }
 
     private void OnDrawGizmos()

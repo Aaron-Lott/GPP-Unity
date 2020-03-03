@@ -27,9 +27,19 @@ namespace PathCreation.Examples
                 PlayerController.instance.GetComponent<Animator>().SetFloat("speed", speed * Mathf.Abs(Input.GetAxis("Horizontal")));
 
                 distanceTravelled += Input.GetAxis("Horizontal") * speed * Time.deltaTime;
-                transform.position = pathCreator.path.GetPointAtDistance(distanceTravelled, endOfPathInstruction);
+
+                Vector3 splinePos = pathCreator.path.GetPointAtDistance(distanceTravelled, endOfPathInstruction);
+
+                transform.position = new Vector3(splinePos.x, transform.position.y, splinePos.z);
+
+                if (transform.position.y < splinePos.y)
+                {
+                    transform.position = splinePos;
+                    PlayerController.instance.rb.velocity = new Vector3(PlayerController.instance.rb.velocity.x, 0, PlayerController.instance.rb.velocity.z);
+                }
 
                 Quaternion rot = pathCreator.path.GetRotationAtDistance(distanceTravelled, endOfPathInstruction);
+
 
                 if(Input.GetAxis("Horizontal") < 0)
                 {
@@ -50,6 +60,14 @@ namespace PathCreation.Examples
                     transform.rotation = Quaternion.Slerp(transform.rotation, rot * Quaternion.Inverse(Quaternion.Euler(0, 180, -90)), 0.2f);
                 }
             }
+
+            PlayerController.instance.CheckIfJumping();
+        }
+
+        private void FixedUpdate()
+        {
+            PlayerController.instance.JumpManager();
+            //PlayerController.instance.FollowerGrounded();
         }
 
         void OnPathChanged() {
