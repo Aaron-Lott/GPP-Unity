@@ -51,6 +51,8 @@ public class SplineTrigger : MonoBehaviour
 
             StartCoroutine(StartSpline());
             GetComponent<BoxCollider>().enabled = false;
+
+            player.GetComponent<Rigidbody>().interpolation = RigidbodyInterpolation.None;
         }
         else
         {
@@ -58,6 +60,8 @@ public class SplineTrigger : MonoBehaviour
             cameraTarget.parent = null;
             cameraTarget.transform.position = initCameraTargetPos;
             entranceCollider.enabled = true;
+
+            player.GetComponent<Rigidbody>().interpolation = RigidbodyInterpolation.Interpolate;
         }
     }
 

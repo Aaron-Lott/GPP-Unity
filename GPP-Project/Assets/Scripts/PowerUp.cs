@@ -35,20 +35,6 @@ public class PowerUp : MonoBehaviour
                 ResetPowerUp();
                 hasPowerUp = false;
             }
-
-            /*if (canRespawn)
-            {
-                elapsedTimeRespawn += Time.deltaTime;
-
-                if (elapsedTimeRespawn > respawnTime)
-                {
-                    EnablePowerUp();
-                }
-            }
-            else
-            {
-                elapsedTimeRespawn = 0;
-            }*/
         }
         else
         {

@@ -42,31 +42,37 @@ public class CameraShake : MonoBehaviour
 
         timeToShake = false;
         transform.localPosition = initialPos;
+
+        yield return null;
     }
 
     public IEnumerator ZoomOut(float magnitude, int maxFieldOfView)
     {
-        if (slowMotion)
-        {
-            Time.timeScale = 0.5f;
-            Time.fixedDeltaTime = 0.02f * Time.timeScale;
-        }
+         if (slowMotion)
+         {
+             Time.timeScale = 0.5f;
+             Time.fixedDeltaTime = 0.02f * Time.timeScale;
+         }
 
-        while (!timeToShake)
-        {
-            if(Camera.main.fieldOfView < maxFieldOfView)
-            {
-                Camera.main.fieldOfView += (Time.deltaTime * magnitude);
-            }
+         while (!timeToShake)
+         {
+             if(Camera.main.fieldOfView < maxFieldOfView)
+             {
+                 Camera.main.fieldOfView += (Time.deltaTime * magnitude);
+             }
 
-            yield return null;
-        }
+             yield return null;
+         }
 
-        Camera.main.fieldOfView = initialView;
+         Camera.main.fieldOfView = initialView;
+         
+
+        yield return null;
     }
 
     public IEnumerator ZoomOut(float magnitude, int maxFieldOfView, float duration)
     {
+        
         float elapsedTime = 0.0f;
 
         while (elapsedTime < duration)
@@ -97,5 +103,9 @@ public class CameraShake : MonoBehaviour
         }
 
         Camera.main.fieldOfView = initialView;
+        
+
+        yield return null;
     }
+    
 }

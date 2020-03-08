@@ -37,14 +37,14 @@ MonoBehaviour:
   m_Name: GIF Animation
   m_EditorClassIdentifier: 
   enabled: 0
-  take: 3
+  take: 6
   captureEveryNthFrame: 1
   fileNameGenerator:
     m_Path:
       m_Root: 5
       m_Leaf: D:/UWE Documents/Games Technology/Level 2/Gameplay Programming/gameplay-devlog.io/assets
       m_ForceAssetFolder: 0
-    m_FileName: basic_avatar_1
+    m_FileName: double_jump_1
   m_ImageInputSelector:
     m_Selected: cameraInputSettings
     cameraInputSettings:
@@ -99,14 +99,14 @@ MonoBehaviour:
   m_Name: Movie
   m_EditorClassIdentifier: 
   enabled: 1
-  take: 12
+  take: 34
   captureEveryNthFrame: 1
   fileNameGenerator:
     m_Path:
       m_Root: 0
       m_Leaf: Recordings
       m_ForceAssetFolder: 0
-    m_FileName: gameplay_programming_1
+    m_FileName: collectables_2
   outputFormat: 0
   videoBitRateMode: 2
   captureAlpha: 0

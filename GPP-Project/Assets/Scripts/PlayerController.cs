@@ -226,8 +226,6 @@ public class PlayerController : MonoBehaviour
 
         anim.SetBool("isLanding", IsLanding());
 
-        Debug.Log(IsGrounded());
-
         JumpImprover();
     }
 
@@ -596,7 +594,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.red;
+       Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         Gizmos.DrawWireSphere(hitCheckR.position, hitCheckRadius);
         Gizmos.DrawWireSphere(hitCheckL.position, hitCheckRadius);

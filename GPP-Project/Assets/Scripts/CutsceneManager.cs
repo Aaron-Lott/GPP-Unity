@@ -21,9 +21,11 @@ public class CutsceneManager : MonoBehaviour
 
     public Transform elevator;
 
-    public enum cutsceneType{DOOR, ELEVATOR};
+    public enum cutsceneType{DOOR, ELEVATOR, OTHER};
 
     public cutsceneType type;
+
+    private bool animPlayed = false;
 
     [Range(1.0f, 10.0f)]
     public float cameraSpeed = 5f;
@@ -90,7 +92,7 @@ public class CutsceneManager : MonoBehaviour
                 yield return null;
             }
         }
-        else
+        else if(type == cutsceneType.ELEVATOR)
         { 
             Vector3 destination = new Vector3(focus.position.x, playerTarget.transform.position.y, focus.position.z - 1.4f);
             while (Vector3.Distance(playerTarget.position, destination) > 0.2f)
@@ -155,7 +157,18 @@ public class CutsceneManager : MonoBehaviour
             //stopping player from rotating follow camera during cutscene.
             followCamera.SetActive(true);
             followCamera.GetComponent<CameraFollow>().rotateWithInput = false;
-            //
+        }
+        else
+        {
+            if (focus.GetComponent<BarrelSpawner>())
+            {
+                focus.GetComponent<BarrelSpawner>().timeToSpawn = true;
+            }
+
+            Animator focusAnim = focus.GetComponent<Animator>();
+            focusAnim.SetTrigger("trigger");
+
+            yield return new WaitForSeconds(3.0f);
         }
 
 

@@ -10,6 +10,9 @@ public class RollBehaviour : StateMachineBehaviour
 
     private PlayerController player;
 
+    float newCenter = 0.5f;
+    float newHeight = 1.0f;
+
 
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
@@ -17,7 +20,7 @@ public class RollBehaviour : StateMachineBehaviour
         rb = animator.GetComponent<Rigidbody>();
 
         //set collider to be smaller during roll.
-        player.SetColliderSize(0.5f, 1.0f);
+        player.SetColliderSize(newCenter, newHeight);
     }
 
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
