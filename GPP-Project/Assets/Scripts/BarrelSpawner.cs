@@ -5,9 +5,11 @@ using UnityEngine;
 public class BarrelSpawner : MonoBehaviour
 {
     private float elapsedTime = 0;
-    private float spawnTime = 3f;
+    public float spawnTime = 3f;
 
     private Animator anim;
+
+    public string animParamter;
 
     public Transform barrel;
     public GameObject movingBarrel;
@@ -30,7 +32,7 @@ public class BarrelSpawner : MonoBehaviour
 
         if(elapsedTime > spawnTime)
         {
-            anim.SetTrigger("trigger");
+            anim.SetTrigger(animParamter);
             elapsedTime = 0;
         }
     }

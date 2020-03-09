@@ -21,6 +21,8 @@ public class CutsceneManager : MonoBehaviour
 
     public Transform elevator;
 
+    public bool secondBarrelAnim = false;
+
     public enum cutsceneType{DOOR, ELEVATOR, OTHER};
 
     public cutsceneType type;
@@ -29,6 +31,8 @@ public class CutsceneManager : MonoBehaviour
 
     [Range(1.0f, 10.0f)]
     public float cameraSpeed = 5f;
+
+    private float speedMultiplier = 0.0001f;
 
     private void Awake()
     {
@@ -55,9 +59,9 @@ public class CutsceneManager : MonoBehaviour
         }
 
         //deactivate player script and freeze player.
-
         FindObjectOfType<PlayerController>().FreezePlayer(true);
         FindObjectOfType<PlayerController>().enabled = false;
+        
 
         cutsceneCamera.SetActive(true);
 
@@ -72,7 +76,7 @@ public class CutsceneManager : MonoBehaviour
 
         while (Vector3.Distance(cutsceneCamera.transform.position, cameraDestination.position) > 0.2f)
         {
-            cutsceneCamera.transform.position = Vector3.Lerp(cutsceneCamera.transform.position, cameraDestination.position, y += (cameraSpeed * 0.0001f));
+            cutsceneCamera.transform.position = Vector3.Lerp(cutsceneCamera.transform.position, cameraDestination.position, y += (cameraSpeed * speedMultiplier));
 
             float x = 1 - Vector3.Distance(cutsceneCamera.transform.position, cameraDestination.position) / startDistance;
             float lerp =  1 / (1 + Mathf.Exp((-12f * (x - 0.5f))));
@@ -81,96 +85,110 @@ public class CutsceneManager : MonoBehaviour
             yield return null;
         }
 
-
-        if(type == cutsceneType.DOOR)
+        switch(type)
         {
-            //deal with door animation.
-            doorScript.SetDoorAnimator();
+            case cutsceneType.DOOR:
 
-            while (!doorScript.GetDoorAnimFinished())
-            {
-                yield return null;
-            }
+                //deal with door animation.
+                doorScript.SetDoorAnimator();
+
+                while (!doorScript.GetDoorAnimFinished())
+                {
+                    yield return null;
+                }
+                break;
+
+            case cutsceneType.ELEVATOR: 
+
+                Vector3 destination = new Vector3(focus.position.x, playerTarget.transform.position.y, focus.position.z - 1.4f);
+                while (Vector3.Distance(playerTarget.position, destination) > 0.2f)
+                {
+                    playerTarget.LookAt(new Vector3(focus.position.x, playerTarget.position.y, focus.position.z));
+                    playerAnim.SetFloat("speed", 3);
+                    playerTarget.transform.position = Vector3.MoveTowards(playerTarget.transform.position, destination, 0.04f);
+                    yield return null;
+                }
+
+                playerAnim.SetFloat("speed", 0);
+                playerAnim.SetTrigger("buttonPress");
+
+                while (!elevatorScript.IsButtonPressed)
+                {
+                    yield return null;
+                }
+
+                startRot = cutsceneCamera.transform.rotation;
+                y = 0f;
+                startDistance = Vector3.Distance(cutsceneCamera.transform.position, cameraDestination2.position);
+
+                while (Vector3.Distance(cutsceneCamera.transform.position, cameraDestination2.transform.position) > 0.2f)
+                {
+                    cutsceneCamera.transform.position = Vector3.Lerp(cutsceneCamera.transform.position, cameraDestination2.transform.position, y += (cameraSpeed * speedMultiplier));
+
+                    float x = 1 - Vector3.Distance(cutsceneCamera.transform.position, cameraDestination2.transform.position) / startDistance;
+                    float lerp = 1 / (1 + Mathf.Exp((-12f * (x - 0.5f))));
+                    cutsceneCamera.transform.rotation = Quaternion.Lerp(startRot, cameraDestination2.transform.rotation, lerp);
+
+                    yield return null;
+                }
+
+                playerTarget.LookAt(new Vector3(elevator.position.x, playerTarget.position.y, elevator.position.z));
+
+
+                destination = new Vector3(elevator.position.x, playerTarget.transform.position.y, elevator.position.z);
+
+                while (Vector3.Distance(playerTarget.position, destination) > 0.2f)
+                {
+                    playerAnim.SetFloat("speed", 3);
+                    playerTarget.transform.position = Vector3.MoveTowards(playerTarget.transform.position, destination, 0.05f);
+                    yield return null;
+                }
+
+                playerAnim.SetFloat("speed", 0);
+
+                playerTarget.parent = elevator;
+
+                destination = new Vector3(elevator.position.x, elevator.position.y - 7.25f, elevator.position.z);
+
+                while (Vector3.Distance(elevator.position, destination) > 0.2f)
+                {
+                    cutsceneCamera.transform.LookAt(elevator);
+                    elevator.transform.position = Vector3.MoveTowards(elevator.transform.position, destination, 0.05f);
+                    yield return null;
+                }
+
+                playerTarget.parent = null;
+
+                //activating follow camera so it can update it's position.
+                //stopping player from rotating follow camera during cutscene.
+                followCamera.SetActive(true);
+                followCamera.GetComponent<CameraFollow>().rotateWithInput = false;
+                break;
+
+            case cutsceneType.OTHER:
+
+                if (focus.GetComponent<BarrelSpawner>())
+                {
+                    focus.GetComponent<BarrelSpawner>().timeToSpawn = true;
+                }
+
+                Animator focusAnim = focus.GetComponent<Animator>();
+
+                if(secondBarrelAnim)
+                {
+                    focusAnim.SetTrigger("trigger2");
+                }
+                else
+                {
+                    focusAnim.SetTrigger("trigger");
+                }
+
+                yield return new WaitForSeconds(3.0f);
+                break;
+
+            default:
+                break;
         }
-        else if(type == cutsceneType.ELEVATOR)
-        { 
-            Vector3 destination = new Vector3(focus.position.x, playerTarget.transform.position.y, focus.position.z - 1.4f);
-            while (Vector3.Distance(playerTarget.position, destination) > 0.2f)
-            {
-                playerTarget.LookAt(new Vector3(focus.position.x, playerTarget.position.y, focus.position.z));
-                playerAnim.SetFloat("speed", 3);
-                playerTarget.transform.position = Vector3.MoveTowards(playerTarget.transform.position, destination, 0.04f);
-                yield return null;
-            }
-
-            playerAnim.SetFloat("speed", 0);
-            playerAnim.SetTrigger("buttonPress");
-
-            while(!elevatorScript.IsButtonPressed)
-            {
-                yield return null;
-            }
-
-            startRot = cutsceneCamera.transform.rotation;
-            y = 0f;
-            startDistance = Vector3.Distance(cutsceneCamera.transform.position, cameraDestination2.position);
-
-            while (Vector3.Distance(cutsceneCamera.transform.position, cameraDestination2.transform.position) > 0.2f)
-            {
-                cutsceneCamera.transform.position = Vector3.Lerp(cutsceneCamera.transform.position, cameraDestination2.transform.position, y += (cameraSpeed * 0.0001f));
-
-                float x = 1 - Vector3.Distance(cutsceneCamera.transform.position, cameraDestination2.transform.position) / startDistance;
-                float lerp = 1 / (1 + Mathf.Exp((-12f * (x - 0.5f))));
-                cutsceneCamera.transform.rotation = Quaternion.Lerp(startRot, cameraDestination2.transform.rotation, lerp);
-
-                yield return null;
-            }
-
-            playerTarget.LookAt(new Vector3(elevator.position.x, playerTarget.position.y, elevator.position.z));
-
-
-            destination = new Vector3(elevator.position.x, playerTarget.transform.position.y, elevator.position.z);
-
-            while (Vector3.Distance(playerTarget.position, destination) > 0.2f)
-            {
-                playerAnim.SetFloat("speed", 3);
-                playerTarget.transform.position = Vector3.MoveTowards(playerTarget.transform.position, destination, 0.05f);
-                yield return null;
-            }
-
-            playerAnim.SetFloat("speed", 0);
-
-            playerTarget.parent = elevator;
-
-            destination = new Vector3(elevator.position.x, elevator.position.y - 7.25f, elevator.position.z);
-
-            while (Vector3.Distance(elevator.position, destination) > 0.2f)
-            {
-                cutsceneCamera.transform.LookAt(elevator);
-                elevator.transform.position = Vector3.MoveTowards(elevator.transform.position, destination, 0.05f);
-                yield return null;
-            }
-
-            playerTarget.parent = null;
-
-            //activating follow camera so it can update it's position.
-            //stopping player from rotating follow camera during cutscene.
-            followCamera.SetActive(true);
-            followCamera.GetComponent<CameraFollow>().rotateWithInput = false;
-        }
-        else
-        {
-            if (focus.GetComponent<BarrelSpawner>())
-            {
-                focus.GetComponent<BarrelSpawner>().timeToSpawn = true;
-            }
-
-            Animator focusAnim = focus.GetComponent<Animator>();
-            focusAnim.SetTrigger("trigger");
-
-            yield return new WaitForSeconds(3.0f);
-        }
-
 
         startRot = cutsceneCamera.transform.rotation;
         y = 0f;
@@ -178,7 +196,7 @@ public class CutsceneManager : MonoBehaviour
         startDistance = Vector3.Distance(cutsceneCamera.transform.position, followCamera.transform.position);
         while (Vector3.Distance(cutsceneCamera.transform.position, followCamera.transform.position) > 0.2f)
         {
-            cutsceneCamera.transform.position = Vector3.Lerp(cutsceneCamera.transform.position, followCamera.transform.position, y += (cameraSpeed * 0.0001f));
+            cutsceneCamera.transform.position = Vector3.Lerp(cutsceneCamera.transform.position, followCamera.transform.position, y += (cameraSpeed * speedMultiplier));
 
             float x = 1 - Vector3.Distance(cutsceneCamera.transform.position, followCamera.transform.position) / startDistance;
             float lerp = 1 / (1 + Mathf.Exp((-12f * (x - 0.5f))));

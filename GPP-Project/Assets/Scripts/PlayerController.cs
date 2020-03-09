@@ -486,7 +486,7 @@ public class PlayerController : MonoBehaviour
 
     void CameraShake()
     {
-        if (enableCameraShake)
+        if (enableCameraShake && Camera.main)
         {
             cameraShake = Camera.main.GetComponent<CameraShake>();
             cameraShake.StartCoroutine(cameraShake.Shake(0.1f, 0.3f));
