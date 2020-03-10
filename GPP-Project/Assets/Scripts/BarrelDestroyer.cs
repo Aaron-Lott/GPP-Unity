@@ -5,18 +5,24 @@ using UnityEngine;
 public class BarrelDestroyer : MonoBehaviour
 {
     private MovingBarrel barrel;
+    
+    private PathCreation.Examples.BarrelPathFollower barrelFollower;
 
     private float lifeTimeAfterSink = 10;
 
     private Vector3 collisionPoint;
 
-    private float tiltMultiplier = 1.6f;
+    private float tiltMultiplier = 0.6f;
 
     private void Start()
     {
         if (transform.parent.GetComponent<MovingBarrel>())
         {
             barrel = transform.parent.GetComponent<MovingBarrel>();
+        }
+        else if(transform.parent.GetComponent<PathCreation.Examples.BarrelPathFollower>())
+        {
+            barrelFollower = transform.parent.GetComponent<PathCreation.Examples.BarrelPathFollower>();
         }
     }
 
@@ -25,8 +31,9 @@ public class BarrelDestroyer : MonoBehaviour
 
         if (collision.gameObject != PlayerController.instance.gameObject)
         {
-            Debug.Log("hit");
             barrel.timeToSink = true;
+            barrelFollower.timeToSink = true;
+
             Destroy(gameObject, lifeTimeAfterSink);
         }
     }
@@ -41,7 +48,7 @@ public class BarrelDestroyer : MonoBehaviour
 
                 if(collisionPoint.y != 0)
                 {
-                    Quaternion newRot = transform.rotation * Quaternion.Euler(collisionPoint.y * tiltMultiplier, 0, 0);
+                    Quaternion newRot = transform.rotation * Quaternion.Euler(0, 0, - collisionPoint.y * tiltMultiplier);
                     transform.rotation = newRot;
                 }
             }

@@ -24,11 +24,14 @@ public class PlayerController : MonoBehaviour
 
     private bool hasFlipped = false;
 
+    [HideInInspector]
+    public bool isGrounded = true;
+
     [SerializeField]
     private Transform groundCheck;
 
     [SerializeField]
-    private float groundCheckRadius = 0.1f;
+    private float groundCheckRadius = 0.2f;
     [SerializeField]
     private LayerMask walkableLayer;
 
@@ -179,12 +182,12 @@ public class PlayerController : MonoBehaviour
             //anim.SetBool("isLanding", false);
 
 
-            if (IsGrounded() || extraJumpCount > 0)
+            if (isGrounded || extraJumpCount > 0)
             {
                 Jump(jumpForce);
             }
 
-            if (IsGrounded())
+            if (isGrounded)
             {
                 //only set just animation on the first jump.
                 anim.SetTrigger("jump");
@@ -205,7 +208,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if(!IsGrounded())
+        if(!isGrounded)
         {
             //slow player's movement down if in the air.
             rb.velocity = new Vector3(movement.x * inAirSpeedMultiplier, rb.velocity.y, movement.z * inAirSpeedMultiplier);
@@ -229,7 +232,25 @@ public class PlayerController : MonoBehaviour
         JumpImprover();
     }
 
-    public bool IsGrounded()
+    private void OnTriggerEnter(Collider other)
+    {
+        isGrounded = true;     
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        isGrounded = true;
+    }
+
+
+    private void OnTriggerExit(Collider other)
+    {
+        isGrounded = false;
+    }
+
+
+
+    /*public bool IsGrounded()
     {
 
         Collider[] hitColliders = Physics.OverlapSphere(groundCheck.position, groundCheckRadius, walkableLayer);
@@ -244,7 +265,7 @@ public class PlayerController : MonoBehaviour
         }
 
         return false;
-    }
+    }*/
 
     private bool IsLanding()
     {
@@ -288,7 +309,7 @@ public class PlayerController : MonoBehaviour
 
 
         //resets player double jump.
-        if(IsGrounded())
+        if(isGrounded)
         {
             if(canDoubleJump)
             {
@@ -316,7 +337,7 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.2f);
         }
 
-        if (IsGrounded())
+        if (isGrounded)
         {
 
             anim.SetFloat("speed", Mathf.Round(rb.velocity.magnitude));
@@ -327,7 +348,7 @@ public class PlayerController : MonoBehaviour
         //check if player is moving along horizontal axis.
         if (rb.velocity.x != 0 || rb.velocity.z != 0)
         {
-            if(IsGrounded())
+            if(isGrounded)
             {
                 //check for input / if the player can roll.
                 if (Input.GetButtonDown("Roll") && canForwardRoll)
@@ -586,7 +607,7 @@ public class PlayerController : MonoBehaviour
 
     public void FollowerGrounded()
     {
-        if(IsGrounded() && rb.velocity.y < 0)
+        if(isGrounded && rb.velocity.y < 0)
         {
             rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
         }
@@ -595,7 +616,7 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmos()
     {
        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        //Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         Gizmos.DrawWireSphere(hitCheckR.position, hitCheckRadius);
         Gizmos.DrawWireSphere(hitCheckL.position, hitCheckRadius);
     }
