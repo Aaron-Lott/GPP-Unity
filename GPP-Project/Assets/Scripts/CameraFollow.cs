@@ -116,7 +116,8 @@ public class CameraFollow : MonoBehaviour
 
     void SnapCameraAxis()
     {
-        if(Input.GetAxis("RightStickX") == 0 && PlayerController.instance.rb.velocity == Vector3.zero)
+        //PlayerController.instance.rb.velocity == Vector3.zero
+        if (Input.GetAxis("RightStickX") == 0 && PlayerController.instance.rb.velocity.magnitude <= 0.1f)
         {
             Vector3 newPos;
 

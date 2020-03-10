@@ -33,7 +33,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float groundCheckRadius = 0.2f;
     [SerializeField]
-    private LayerMask walkableLayer;
+    private string walkableLayer = "Walkable";
 
     private int extraJumpCount = 0;
     [SerializeField]
@@ -57,8 +57,12 @@ public class PlayerController : MonoBehaviour
     private float movementSpeed = 8.0f;
     private float initialMovementSpeed;
 
+    private Animator blackoutPanel;
+
     [Range(1.0f, 2.0f)]
     public float speedBoostMultiplier = 1.5f;
+
+    private float initialSpeedBoost = 1.5f;
 
     private float powerUpDuration = 10.0f;
     private float startPowerUpTime;
@@ -117,10 +121,8 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public Vector3 movement;
 
-
     private void Awake()
     {
-
         if(instance != null)
         {
             Destroy(gameObject);
@@ -129,10 +131,14 @@ public class PlayerController : MonoBehaviour
         {
             instance = this;
         }
+
+        CreateRespawner();
     }
 
     void Start()
     {
+        walkableLayer = "Walkable";
+
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
 
@@ -227,59 +233,49 @@ public class PlayerController : MonoBehaviour
             anim.SetBool("isFalling", false);
         }
 
-        anim.SetBool("isLanding", IsLanding());
-
         JumpImprover();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        isGrounded = true;     
+        if (other.gameObject.layer == LayerMask.NameToLayer("Walkable"))
+        {
+            anim.SetBool("isLanding", true);
+            isGrounded = true;
+        }   
     }
 
     private void OnTriggerStay(Collider other)
     {
-        isGrounded = true;
+        if (other.gameObject.layer == LayerMask.NameToLayer(walkableLayer))
+        {
+            isGrounded = true;
+        }
     }
 
 
     private void OnTriggerExit(Collider other)
     {
-        isGrounded = false;
+        if (other.gameObject.layer == LayerMask.NameToLayer(walkableLayer))
+        {
+            anim.SetBool("isLanding", false);
+            isGrounded = false;
+        }
     }
 
-
-
-    /*public bool IsGrounded()
+    public void CreateRespawner()
     {
+        float boxSize = 10;
 
-        Collider[] hitColliders = Physics.OverlapSphere(groundCheck.position, groundCheckRadius, walkableLayer);
+        GameObject startRespawner = new GameObject("Start Respawner");
+        startRespawner.AddComponent<Respawner>();
+        startRespawner.AddComponent<BoxCollider>();
+        startRespawner.GetComponent<BoxCollider>().isTrigger = true;
+        startRespawner.GetComponent<BoxCollider>().size = new Vector3(1, 1, 1) * boxSize;
 
-        //checks for each object with walkable layer and returns true.
-        foreach (Collider hit in hitColliders)
-        {
-            if (hit)
-            {
-                return true;
-            }
-        }
+        startRespawner.GetComponent<Respawner>().isActive = true;
 
-        return false;
-    }*/
-
-    private bool IsLanding()
-    {
-        Collider[] hitColliders = Physics.OverlapSphere(groundCheck.position, groundCheckRadius * 2, walkableLayer);
-
-        foreach (Collider hit in hitColliders)
-        {
-            if (hit && rb.velocity.y < 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        startRespawner.transform.position = transform.position;
     }
 
     private void Jump(float force)
@@ -369,6 +365,7 @@ public class PlayerController : MonoBehaviour
             speedBoostEffect.Stop();
         }
     }
+
     private void AttackAnimationManager()
     {
 
@@ -547,9 +544,10 @@ public class PlayerController : MonoBehaviour
 
     public void ApplySpeedBoost()
     {
-        hasSpeedBoost = true;
         movementSpeed *= speedBoostMultiplier;
         anim.speed *= speedBoostMultiplier;
+        speedBoostMultiplier = 1;
+        hasSpeedBoost = true;
     }
 
     public void ResetSpeedBoost()
@@ -558,6 +556,8 @@ public class PlayerController : MonoBehaviour
         movementSpeed = initialMovementSpeed;
         warpEffect.Stop();
         speedBoostEffect.Stop();
+
+        speedBoostMultiplier = initialSpeedBoost;
         anim.speed /= speedBoostMultiplier;
     }
 

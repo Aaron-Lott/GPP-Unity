@@ -10,12 +10,14 @@ public class PowerUp : MonoBehaviour
 
     public GameObject collectEffect;
 
-    public float powerUpDuration = 10.0f;
+    private float powerUpDuration = 15.0f;
     private float elapsedTimeDuration;
 
     private bool hasPowerUp = false;
 
-    public float respawnTime = 5f;
+    private bool collected = false;
+
+    private float respawnTime = 16.0f;
     private float elapsedTimeRespawn;
 
     public bool canRespawn = true;
@@ -40,6 +42,17 @@ public class PowerUp : MonoBehaviour
         {
             elapsedTimeDuration = 0;
         }
+
+        if(collected)
+        {
+            elapsedTimeRespawn += Time.deltaTime;
+
+            if(elapsedTimeRespawn > respawnTime)
+            {
+                EnablePowerUp();
+                collected = false;
+            }
+        }
     }
 
 
@@ -51,6 +64,8 @@ public class PowerUp : MonoBehaviour
             Instantiate(collectEffect, transform.position, Quaternion.identity);
             PickUp();
 
+            collected = true;
+            elapsedTimeRespawn = 0;
         }
     }
 
