@@ -16,7 +16,16 @@ namespace PathCreation.Examples
 
         private float sinkSpeed = 2;
 
-        // Start is called before the first frame update
+        public float timeToRotate = 0.05f;
+        private float elapsedTime = 0;
+
+        private bool hasRotated = false;
+
+        private void Awake()
+        {
+            transform.rotation = Quaternion.Euler(0, -180, -90);
+        }
+
         void Start()
         {
             if (pathCreator != null)
@@ -25,9 +34,9 @@ namespace PathCreation.Examples
             }
         }
 
-        // Update is called once per frame
          void Update()
         {
+
             if (!timeToSink)
             {
                 if (pathCreator != null)
@@ -71,6 +80,10 @@ namespace PathCreation.Examples
             {
                 other.transform.parent = transform;
                 PlayerController.instance.rb.interpolation = RigidbodyInterpolation.None;
+            }
+            else
+            {
+                //timeToSink = true;
             }
         }
 

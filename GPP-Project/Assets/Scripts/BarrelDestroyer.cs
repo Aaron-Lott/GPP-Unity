@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class BarrelDestroyer : MonoBehaviour
-{
-    private MovingBarrel barrel;
-    
+{    
     private PathCreation.Examples.BarrelPathFollower barrelFollower;
 
     private float lifeTimeAfterSink = 10;
@@ -16,11 +14,7 @@ public class BarrelDestroyer : MonoBehaviour
 
     private void Start()
     {
-        if (transform.parent.GetComponent<MovingBarrel>())
-        {
-            barrel = transform.parent.GetComponent<MovingBarrel>();
-        }
-        else if(transform.parent.GetComponent<PathCreation.Examples.BarrelPathFollower>())
+        if (transform.parent.GetComponent<PathCreation.Examples.BarrelPathFollower>())
         {
             barrelFollower = transform.parent.GetComponent<PathCreation.Examples.BarrelPathFollower>();
         }
@@ -28,10 +22,8 @@ public class BarrelDestroyer : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-
         if (collision.gameObject != PlayerController.instance.gameObject)
         {
-            barrel.timeToSink = true;
             barrelFollower.timeToSink = true;
 
             Destroy(gameObject, lifeTimeAfterSink);

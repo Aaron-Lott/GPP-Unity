@@ -18,6 +18,8 @@ public class BarrelSpawner : MonoBehaviour
 
     public bool timeToSpawn = false;
 
+    public Transform barrelSpline;
+
     private void Start()
     {
         anim = GetComponent<Animator>();
@@ -39,7 +41,8 @@ public class BarrelSpawner : MonoBehaviour
 
     public void SpawnMovingBarrel()
     {
-        Instantiate(movingBarrel, barrel.position, Quaternion.identity);
+       GameObject newBarrel = Instantiate(movingBarrel, barrel.position, Quaternion.identity);
+        newBarrel.transform.parent = barrelSpline;
     }
 
     public void PlayGooSplash()

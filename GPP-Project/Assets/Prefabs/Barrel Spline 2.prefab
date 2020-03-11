@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1883603169144144185}
   - component: {fileID: 1883603169144144186}
   m_Layer: 0
-  m_Name: Barrel Spline
+  m_Name: Barrel Spline 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -95,7 +95,7 @@ MonoBehaviour:
       - 0
       globalNormalsAngle: 0
       flipNormals: 0
-    vertexPathUpToDate: 1
+    vertexPathUpToDate: 0
     vertexPathMaxAngleError: 0.3
     vertexPathMinVertexSpacing: 0.01
     showTransformTool: 1
