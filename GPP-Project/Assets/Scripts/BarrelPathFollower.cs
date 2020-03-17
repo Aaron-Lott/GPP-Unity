@@ -21,6 +21,8 @@ namespace PathCreation.Examples
 
         private bool hasRotated = false;
 
+        public Collider speedVolume;
+
         private void Awake()
         {
             transform.rotation = Quaternion.Euler(0, -180, -90);
@@ -32,6 +34,7 @@ namespace PathCreation.Examples
             {
                 pathCreator.pathUpdated += OnPathChanged;
             }
+
         }
 
          void Update()
@@ -81,9 +84,10 @@ namespace PathCreation.Examples
                 other.transform.parent = transform;
                 PlayerController.instance.rb.interpolation = RigidbodyInterpolation.None;
             }
-            else
+            else if(other.gameObject == speedVolume)
             {
-                //timeToSink = true;
+                Debug.Log("dssd");
+                speed = speed * 2;
             }
         }
 
@@ -94,9 +98,11 @@ namespace PathCreation.Examples
                 other.transform.parent = null;
                 PlayerController.instance.rb.interpolation = RigidbodyInterpolation.Interpolate;
             }
+            else if (other == speedVolume)
+            {
+                speed = speed / 2;
+            }
         }
-
-
     }
 }
 

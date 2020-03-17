@@ -62,14 +62,20 @@ public class CameraFollow : MonoBehaviour
             ZoomHandler();
         }
 
-        offset = turnAngleHorizontal * offset;
+        if (!PlayerController.instance.LockIntoCombat())
+        {
+            offset = turnAngleHorizontal * offset;
+            transform.LookAt(target.position);
+            SnapCameraAxis();
+        }
+        else
+        {
+            offset = initialOffset;
+            transform.LookAt(PlayerController.instance.FindClosestEnemy());
+        }
 
         transform.position = Vector3.Lerp(transform.position, target.position - (offset * zoomValue), smoothTime);
 
-        transform.LookAt(target.position);
-
-
-        SnapCameraAxis();
         ColliderHandler();
         
     }

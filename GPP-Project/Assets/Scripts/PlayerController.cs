@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : Damageable
 {
 
     public static PlayerController instance;
@@ -86,7 +86,6 @@ public class PlayerController : MonoBehaviour
     public int damageAmount = 1;
 
     public int hitForce = 1000;
-    private float forceRadius = 3;
 
     private bool wieldingWeapon = false;
 
@@ -96,9 +95,6 @@ public class PlayerController : MonoBehaviour
     private Transform hitCheckL;
     [SerializeField]
     private Transform hitCheckR;
-    [SerializeField]
-    private Transform hitCheckWeapon;
-
 
     [SerializeField]
     private float hitCheckRadius = .75f;
@@ -110,6 +106,9 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public Vector3 originalCapsuleCenter;
 
+    public GameObject sword;
+    public GameObject placeholderSword;
+
     //POWERUP VARIABLES
     [HideInInspector]
     public DoubleJump doubleJump;
@@ -120,6 +119,11 @@ public class PlayerController : MonoBehaviour
 
     [HideInInspector]
     public Vector3 movement;
+
+    private Sword swordScript;
+
+    private float elapsedTime = 0;
+    private float invisibilityTime = 1.5f;
 
     private void Awake()
     {
@@ -137,6 +141,9 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        swordScript = sword.GetComponent<Sword>();
+        sword.SetActive(false);
+
         walkableLayer = "Walkable";
 
         rb = GetComponent<Rigidbody>();
@@ -157,6 +164,9 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         CheckIfJumping();
+
+        //invinsibiltyTimer
+        elapsedTime += Time.deltaTime;
     }
 
     void FixedUpdate()
@@ -366,47 +376,124 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public bool LockIntoCombat()
+    {
+    
+        if (Input.GetAxisRaw("LockCombat") > 0)
+        {
+            GelatinousCube[] allEnemies = FindObjectsOfType<GelatinousCube>();
+
+            foreach (GelatinousCube currentEnemy in allEnemies)
+            {
+                if (Vector3.Distance(transform.position, currentEnemy.transform.position) < currentEnemy.engageDistance)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public Transform FindClosestEnemy()
+    {
+        float distanceToClostestEnemy = Mathf.Infinity;
+        GelatinousCube closestEnemy = null;
+        GelatinousCube[] allEnemies = FindObjectsOfType<GelatinousCube>();
+        
+        foreach(GelatinousCube currentEnemy in allEnemies)
+        {
+            float distanceToEnemy = (currentEnemy.transform.position - transform.position).sqrMagnitude;
+
+            if(distanceToEnemy < distanceToClostestEnemy)
+            {
+                distanceToClostestEnemy = distanceToEnemy;
+                closestEnemy = currentEnemy;
+            }
+        }
+
+        if(closestEnemy != null)
+        {
+            return closestEnemy.transform;
+        }
+        else
+        {
+            return FindObjectOfType<CameraFollow>().target;
+        }
+    }
+
+    public override void OnDamage()
+    {
+        anim.SetTrigger("takeDamage");
+    }
+
+    public void PlayerTakeDamage(int damageAmount, Vector3 spawnPos)
+    {
+        if(elapsedTime > invisibilityTime)
+        {
+            TakeDamage(damageAmount, spawnPos);
+            elapsedTime = 0;
+        }
+    }
+
     private void AttackAnimationManager()
     {
 
-        if (Input.GetButtonDown("AttackL") && anim.GetLayerWeight(1) == 0 && anim.GetLayerWeight(3) == 0)
+        if (Input.GetButtonDown("AttackL"))
         {
-            int randAnim = Random.Range(1, 7);
-            anim.SetTrigger("attack");
+            if(anim.GetLayerWeight(1) == 0 && anim.GetLayerWeight(3) == 0)
+            {
+                int randAnim = Random.Range(1, 7);
+                anim.SetTrigger("attack");
 
-            if (!wieldingWeapon)
-            {
-                //select random attack from blend tree and set blend parameter.
-                anim.SetFloat("Blend", randAnim);
-                anim.SetLayerWeight(1, 1.0f);
-                StartCoroutine(AttackingUnarmed());
-            }
-            else
-            {
-                //select random attack from blend tree and set blend parameter.
-                anim.SetFloat("2ArmedBlend", randAnim);
-                anim.SetLayerWeight(3, 1.0f);
-                StartCoroutine(Attacking2Armed());
+                if (!wieldingWeapon)
+                {
+                    //select random attack from blend tree and set blend parameter.
+                    anim.SetFloat("Blend", randAnim);
+                    anim.SetLayerWeight(1, 1.0f);
+                    StartCoroutine(AttackingUnarmed());
+                }
+                else
+                {
+                    //select random attack from blend tree and set blend parameter.
+                    anim.SetFloat("2ArmedBlend", randAnim);
+                    anim.SetLayerWeight(3, 1.0f);
+                    StartCoroutine(Attacking2Armed());
+                }
             }
         }
         else if (Input.GetButtonDown("WieldWeapon"))
         {
-            wieldingWeapon = !wieldingWeapon;
-            int weight = 0;
-
-            if(wieldingWeapon)
+            if(anim.GetLayerWeight(4) == 0)
             {
-                weight = 1;
-            }
-            else
-            {
-                weight = 0;
-            }
+                wieldingWeapon = !wieldingWeapon;
+                int weight = 0;
 
-            anim.SetLayerWeight(2, weight);
+                anim.SetLayerWeight(4, 1);
+
+                if (wieldingWeapon)
+                {
+                    weight = 1;
+                    anim.SetTrigger("sheath");
+                }
+                else
+                {
+                    weight = 0;
+                    anim.SetTrigger("unsheath");
+                }
+
+                StartCoroutine(ResetSheathLayer());
+                anim.SetLayerWeight(2, weight);
+            }
         }
 
         
+    }
+
+    IEnumerator ResetSheathLayer()
+    {
+        yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(4).length);
+        anim.SetLayerWeight(4, 0);
     }
 
     IEnumerator AttackingUnarmed()
@@ -431,7 +518,7 @@ public class PlayerController : MonoBehaviour
         {
             if (hit)
             {
-                if (hit.GetComponent<Damageable>())
+                if (hit.GetComponent<Damageable>() && !hit.GetComponent<PlayerController>())
                 {
                     hit.GetComponent<Damageable>().TakeDamage(damageAmount, hit.transform.position);
                 }
@@ -454,7 +541,7 @@ public class PlayerController : MonoBehaviour
         {
             if (hit)
             {
-                if (hit.GetComponent<Damageable>())
+                if (hit.GetComponent<Damageable>() && !hit.GetComponent<PlayerController>())
                 {
                     hit.GetComponent<Damageable>().TakeDamage(damageAmount, hitCheckL.transform.position);                  
                 }
@@ -467,27 +554,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void HitWeapon()
+    public void HitSword()
     {
-        CameraShake();
-
-        /*Collider[] hitColliders = Physics.OverlapSphere(hitCheckWeapon.position, hitCheckRadius);
-
-        foreach (Collider hit in hitColliders)
-        {
-            if (hit)
-            {
-                if (hit.GetComponent<Damageable>())
-                {
-                    hit.GetComponent<Damageable>().TakeDamage(damageAmount, hitCheckL.transform.position);
-                }
-
-                if (hit.GetComponent<Rigidbody>() && hit.gameObject != gameObject)
-                {
-                    ApplyHitForce(hit);
-                }
-            }
-        }*/
+        swordScript.Hit();
     }
 
     void StartHit()
@@ -611,6 +680,18 @@ public class PlayerController : MonoBehaviour
         {
             rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
         }
+    }
+
+    public void WeaponSwitch()
+    {
+        sword.SetActive(true);
+        placeholderSword.SetActive(false);
+    }
+
+    public void WeaponSwitchBack()
+    {
+        sword.SetActive(false);
+        placeholderSword.SetActive(true);
     }
 
     private void OnDrawGizmos()

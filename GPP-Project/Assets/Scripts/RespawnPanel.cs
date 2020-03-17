@@ -7,12 +7,7 @@ public class RespawnPanel : MonoBehaviour
     [HideInInspector]
     public bool hasTriggered = false;
 
-    private Animator playerAnim;
-
-    private void Start()
-    {
-        playerAnim = PlayerController.instance.GetComponent<Animator>();
-    }
+    private int damageAmount = 1;
 
     public void Respawn() //called in blackout panel animation.
     {
@@ -26,7 +21,9 @@ public class RespawnPanel : MonoBehaviour
             }
         }
 
-        playerAnim.SetTrigger("takeDamage");
+        PlayerController.instance.PlayerTakeDamage(damageAmount, new Vector3(PlayerController.instance.transform.position.x,
+            PlayerController.instance.transform.position.y + 2, PlayerController.instance.transform.position.z));
+
         hasTriggered = false;
     }
 }

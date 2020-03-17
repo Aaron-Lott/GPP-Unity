@@ -32,17 +32,20 @@ public class BarrelDestroyer : MonoBehaviour
 
     private void OnCollisionStay(Collision collision)
     {
+        ManageRotation(collision);
+    }
+
+    private void ManageRotation(Collision collision)
+    {
         if (collision.gameObject == PlayerController.instance.gameObject)
         {
             foreach (ContactPoint contact in collision.contacts)
-            {      
-               collisionPoint = transform.InverseTransformPoint(contact.point);
+            {
+                collisionPoint = transform.InverseTransformPoint(contact.point);
 
-                if(collisionPoint.y != 0)
-                {
-                    Quaternion newRot = transform.rotation * Quaternion.Euler(0, 0, - collisionPoint.y * tiltMultiplier);
-                    transform.rotation = newRot;
-                }
+                Quaternion newRot = transform.rotation * Quaternion.Euler(0, 0, -collisionPoint.y * tiltMultiplier);
+                transform.rotation = newRot;
+
             }
         }
     }
